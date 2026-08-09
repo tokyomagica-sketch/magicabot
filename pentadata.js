@@ -20882,7 +20882,7 @@ exports.shoplistMemorial = [
 ];
 
 //■■■■■■■■■■■■■■■■■■■■ペンタ特殊カード
-exports.giftids=['さとうこ不','あらんあ記', 'まきむく', 'でじゃゔ', 'あにまあ', 'かぐらち'];
+exports.giftids=['さとうこ不','あらんあ記', 'まきむく', 'でじゃゔ', 'あにまあ', 'かぐらち', 'たかつき']; //出現しないキャラ
 exports.spcards = function (chrs) {
   const list = [
     { eventid: "SNOW", originalid: "あじすか" },
