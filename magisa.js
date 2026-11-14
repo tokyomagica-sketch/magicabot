@@ -95,11 +95,11 @@ exports.main = async function(client, message, formcontent){ console.log('magisa
 //■■■■■■■■■■■■■■■■■■■■　★メンテ時の動作　■■■■■■■■■■■■■■■■■■■■
 exports.mainte = async function(client, message){
   const data = await require('./magisadata'); //データベース用のmagisadata.jsを参照
-  message.channel.send({embed: {
+  message.channel.send({embeds: [{
     description:`メンテ中！ ごめんね！`,
     color: 0x000000,
     footer:{text:data.updated}
-  }});
+  }]});
 }
 
 
@@ -126,8 +126,8 @@ exports.newhimitsu = async function(client, message){ console.log('magisa.js new
   //■■ひみつを確認
   if(senthmt[1].match(/^(確認|一覧)$/)){
     const mid = '＠＠'+message.author.id;
-    const msgs1 = await client.channels.get(data.DataSet.stTm['Himitsu']).fetchMessages({ limit:100 }); //発言取得
-    const msgs2 = await client.channels.get(data.DataSet.tcTm['Himitsu']).fetchMessages({ limit:100 }); //発言取得
+    const msgs1 = await client.channels.cache.get(data.DataSet.stTm['Himitsu']).messages.fetch({ limit:100 }); //発言取得
+    const msgs2 = await client.channels.cache.get(data.DataSet.tcTm['Himitsu']).messages.fetch({ limit:100 }); //発言取得
     const msgs = msgs1.concat(msgs2);
     const oldmsgs = (senthmt[0].match(/^投稿済/)) ? msgs.filter(message => message.content.includes(mid) )
                                                 : msgs.filter(message => message.content.includes(mid) && message.content.includes(chr.name) );
@@ -149,14 +149,14 @@ exports.newhimitsu = async function(client, message){ console.log('magisa.js new
   
   //■■データセット分岐
   const ds = (senthmt[0].match(/^投稿済/)) ? '' : data.DataSet[chr.genre];
-  const logch = (senthmt[0].match(/^投稿済/)) ? '' : client.channels.get(ds['Himitsu']);
+  const logch = (senthmt[0].match(/^投稿済/)) ? '' : client.channels.cache.get(ds['Himitsu']);
   
   //■■ひみつを削除
   if(senthmt[1].match(/^削除/)){//message.channel.send('ひみつ時報㊙️に削除機能は実装されていません。お手数おかけしますが、管理者へお問い合わせください。'); 
     //例外アラート
     if(senthmt[0].match(/^投稿済/)){message.channel.send('削除を行う場合は、個人のひみつ一覧㊙️を呼び出してください。'); return;};
     if(senthmt[1].length<4){message.channel.send('ひみつ一覧㊙️のリスト番号が指定されていません。'); return;};
-    const sentmsgs = await message.channel.fetchMessages({limit:2});
+    const sentmsgs = await message.channel.messages.fetch({limit:2});
     const listmsg = sentmsgs.last();
     if(!listmsg.content.includes(mchr+'のひみつ一覧㊙️')){message.channel.send(mchr+'のひみつ一覧㊙️を直前に表示してください。'); return;};
     
@@ -166,7 +166,7 @@ exports.newhimitsu = async function(client, message){ console.log('magisa.js new
     const hmttext = listline.split(/\) | \[| \[画像\]：/)[1];
     const keytext = chr.name+'＠＠'+hmttext;
     //ひみつログチャンネルから本文を含む発言を探して削除する
-    const hmsgs = await logch.fetchMessages({ limit:100 });
+    const hmsgs = await logch.messages.fetch({ limit:100 });
     const hmsg = hmsgs.find(m => m.content.includes(keytext));
     const hlines = hmsg.content.split('\n').filter(l => !l.includes(keytext));
     const newhmsg = (hlines.length == 0) ? 'deleted' : hlines.join('\n');
@@ -181,7 +181,7 @@ exports.newhimitsu = async function(client, message){ console.log('magisa.js new
   if(senthmt[1].match(/＠＠|＄＄|\) | \[|\n/)){message.channel.send('使用できない記号・改行等が含まれています。修正ののち再投稿をお願いします。'); return;};
   
   //■■入力へ
-  const msgs = await logch.fetchMessages({ limit:1 });
+  const msgs = await logch.messages.fetch({ limit:1 });
   const msg = msgs.first();
   const file = await message.attachments.first();
   const newhmt = chr.name + '＠＠' + senthmt[1] + ( file ? '＄＄'+file.url : '' ) + '＠＠' + message.author.id + '＠＠0＠＠■';
@@ -213,8 +213,8 @@ exports.himitsu = async function(client, ftrps){ console.log('magisa.js himitsu'
   //tm = (ftrps && ftrps == sunday) ? tm + '(日曜：初出'+PofNEW+'%)' : tm + '(初出'+PofNEW+'%)' ;
   
   //■■全ひみつログ取得　→　ひみつデータ集へ変換
-  const msgs1 = await client.channels.get(data.DataSet.stTm['Himitsu']).fetchMessages({ limit:100 }); //東魔生徒
-  const msgs2 = await client.channels.get(data.DataSet.tcTm['Himitsu']).fetchMessages({ limit:100 }); //東魔教師
+  const msgs1 = await client.channels.cache.get(data.DataSet.stTm['Himitsu']).messages.fetch({ limit:100 }); //東魔生徒
+  const msgs2 = await client.channels.cache.get(data.DataSet.tcTm['Himitsu']).messages.fetch({ limit:100 }); //東魔教師
   const msgs = await msgs1.concat(msgs2); //各ログをつなげます
   const hmtList = await msgs.map(message => message.content).join('\n').split('\n').map(h => h.split('＠＠')); //ひみつデータ集ができました
   
@@ -234,12 +234,12 @@ exports.himitsu = async function(client, ftrps){ console.log('magisa.js himitsu'
   
   //■■キャラの取得　→　データセット分岐
   const chr = tools.getCharacter(characters, hmt[0]);
-  if(!chr){client.channels.get(data.DataSet.open['HimitsuTarget']).send(hmt[0]+'が存在しません。');exports.himitsu();return;};
+  if(!chr){client.channels.cache.get(data.DataSet.open['HimitsuTarget']).send(hmt[0]+'が存在しません。');exports.himitsu();return;};
   const ds = data.DataSet[chr.genre];
   
   //■■サムネイルURL取得
   const tchid = ((today.getMonth()+1)+'/'+today.getDate() == '4/1') ? data.DataSet.april['Thumbnail'] : ds['Thumbnail'];
-  const tmsgs = await client.channels.get(tchid).fetchMessages({ limit:100 });
+  const tmsgs = await client.channels.cache.get(tchid).messages.fetch({ limit:100 });
   const tmsg = tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name) );
   const thumbnailurl = (tmsg) ? tmsg.split('：')[1] : data.noimage;
   
@@ -251,10 +251,10 @@ exports.himitsu = async function(client, ftrps){ console.log('magisa.js himitsu'
   //const user = client.users.get(hmt[2]);
   const hmtI = hmt[1].split('＄＄');
   const imageurl = (hmtI.length==2) ? hmtI[1] : undefined;
-  const jihoch = await client.channels.get(ds['HimitsuTarget']);
-  const jihoch2 = await client.channels.get(data.DataSet.open['HimitsuTarget']);
+  const jihoch = await client.channels.cache.get(ds['HimitsuTarget']);
+  const jihoch2 = await client.channels.cache.get(data.DataSet.open['HimitsuTarget']);
   sendResult([jihoch, jihoch2], tm, tools.emj(chr)+chr.name+'のひみつ㊙️ '+nw,
-             hmtI[0], ds.color, ''/*user.avatarURL*/, '🧙 マギカサーチ magisa'+ftrps, thumbnailurl, ''/*`by ${user}`*/,  imageurl);
+             hmtI[0], ds.color, ''/*user.displayAvatarURL()*/, '🧙 マギカサーチ magisa'+ftrps, thumbnailurl, ''/*`by ${user}`*/,  imageurl);
 
   //■■発言後処理
   const keyhmt = hmt.join('＠＠'); //検索用にひみつを結合
@@ -286,11 +286,11 @@ exports.todayis = async function(client){ console.log('magisa.js todayis');
   for(let i=0;i<fcharacters.length;i++){
     const chr = fcharacters[i];
     const ds = data.DataSet[chr.genre];
-    const jihoch = await client.channels.get(ds['HimitsuTarget']); //発言先
-    const jihoch2 = await client.channels.get(data.DataSet.open['HimitsuTarget']);
+    const jihoch = await client.channels.cache.get(ds['HimitsuTarget']); //発言先
+    const jihoch2 = await client.channels.cache.get(data.DataSet.open['HimitsuTarget']);
     //サムネイルURL取得
-    const logch = client.channels.get(ds['Thumbnail']);
-    const tmsgs = await logch.fetchMessages({ limit:100 });
+    const logch = client.channels.cache.get(ds['Thumbnail']);
+    const tmsgs = await logch.messages.fetch({ limit:100 });
     const tmsg = tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name) );
     const thumbnailurl = (tmsg) ? tmsg.split('：')[1] : data.noimage;
     sendResult([jihoch, jihoch2], chr.birthday.split('/')[0]+'月'+chr.birthday.split('/')[1]+'日です！', tools.emj(chr)+chr.name, '🎂 Happy Birthday! 🎂', ds.color, '', '🧙 マギカサーチ magisa', thumbnailurl);
@@ -318,15 +318,15 @@ exports.setthumbnail = async function(client, message){ console.log('magisa.js s
   let ds;
   let logch;
                                                        
-  if(chr.eventid)                        { logch  = client.channels.get(pata.sptnlog); }
+  if(chr.eventid)                        { logch  = client.channels.cache.get(pata.sptnlog); }
   else if(message.content.match(/の四月/)){ imgmsg = '四月';
                                            ds     = data.DataSet['april'];
-                                           logch  = client.channels.get(ds['Thumbnail']); }
+                                           logch  = client.channels.cache.get(ds['Thumbnail']); }
   else                                   { ds     = data.DataSet[chr.genre];
-                                           logch  = client.channels.get(ds['Thumbnail']); };
+                                           logch  = client.channels.cache.get(ds['Thumbnail']); };
   
   //■■ログの取得
-  const msgs = await logch.fetchMessages({ limit:100 });
+  const msgs = await logch.messages.fetch({ limit:100 });
   const msg = msgs.first();
   let msgc = msg.content;
   
@@ -377,7 +377,7 @@ async function profile(client, message, data, tools, command, st){ console.log('
   if(command.length == 2){ //コマンドが2節 → 全プロフィール
 
     //プロフィールURLを検索
-    /*const pfms = await client.channels.get(ds['Profile']).fetchMessages({ limit:100 });
+    /*const pfms = await client.channels.cache.get(ds['Profile']).messages.fetch({ limit:100 });
     let pfl = profileUrl(st, pfms);
     if(pfl) pfl='\n\nmore > '+pfl;*/
     let pfl = (st.notion) ? '\n\n[🔗詳細(Notion)]('+st.notion+')' : '' ;
@@ -466,7 +466,7 @@ async function profile(client, message, data, tools, command, st){ console.log('
       /*
     }else if(command[2].match(/^プ(ロフ(ィール)?)?$|証$|紹(介)?|^しょ|^more$/i) ){ //■紹介文URL機能
       //プロフィールURLを検索
-      const pfms = await client.channels.get(ds['Profile']).fetchMessages({ limit:100 });
+      const pfms = await client.channels.cache.get(ds['Profile']).messages.fetch({ limit:100 });
       let pfl = profileUrl(st, pfms);
       if(!pfl) pfl='未投稿';
       description = '紹介文：'+pfl;*/
@@ -480,12 +480,12 @@ async function profile(client, message, data, tools, command, st){ console.log('
       //■■サムネイルURL取得
       const today = tools.getTodayJp();
       const tchid = ((today.getMonth()+1)+'/'+today.getDate() == '4/1') ? data.DataSet.april['Thumbnail'] : ds['Thumbnail'];
-      const tmsgs = await client.channels.get(tchid).fetchMessages({ limit:100 });
+      const tmsgs = await client.channels.cache.get(tchid).messages.fetch({ limit:100 });
       const tmsg = tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(st.name) );
       const thumbnailurl = (tmsg) ? tmsg.split('：')[1] : data.noimage;
 
       //■■発言取得
-      const msgs = await client.channels.get(data.DataSet[st.genre]['Himitsu']).fetchMessages({ limit:100 });
+      const msgs = await client.channels.cache.get(data.DataSet[st.genre]['Himitsu']).messages.fetch({ limit:100 });
       const hmtLine = msgs.map(message => message.content).join('\n').split('\n').filter(h => h.split('＠＠')[0]==st.name);
       if(hmtLine.length==0){
         sendResult(message.channel, hatitle, tools.emj(st)+st.name+'のひみつ㊙️',
@@ -505,7 +505,7 @@ async function profile(client, message, data, tools, command, st){ console.log('
           if(hmtI.length==2) imageurl = hmtI[1];
         };
         sendResult(message.channel, hatitle, tools.emj(st)+st.name+'のひみつ㊙️'/*+' ['+hmt[3]+'回投稿]'*/,
-                   hdescription, ds.color, ''/*client.users.get(hmt[2]).avatarURL*/, '🧙 マギカサーチ magisa', thumbnailurl, '', imageurl);
+                   hdescription, ds.color, ''/*client.users.get(hmt[2]).displayAvatarURL()*/, '🧙 マギカサーチ magisa', thumbnailurl, '', imageurl);
       });
       return;
     }else{ //コマンドが3節 → 部分プロフィール
@@ -532,7 +532,7 @@ async function profile(client, message, data, tools, command, st){ console.log('
   //サムネイルURL取得
   const today = tools.getTodayJp();
   const tchid = ((today.getMonth()+1)+'/'+today.getDate() == '4/1') ? data.DataSet.april['Thumbnail'] : ds['Thumbnail'];
-  const tmsgs = await client.channels.get(tchid).fetchMessages({ limit:100 });
+  const tmsgs = await client.channels.cache.get(tchid).messages.fetch({ limit:100 });
   const tmsg = tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(st.name) );
   const thumbnailurl = (tmsg) ? tmsg.split('：')[1] : data.noimage;
   
@@ -1131,7 +1131,7 @@ async function author(client, message, data, tools, students, command, ds){
       let subinfolist = [];
       /*
       if(command[2]&&command[2].match(/^プ(ロフ(ィール)?)?$|証$|紹(介)?|^しょ|^more$/i) ){
-        const pfms = await client.channels.get(ds['Profile']).fetchMessages({ limit:100 });
+        const pfms = await client.channels.cache.get(ds['Profile']).messages.fetch({ limit:100 });
         title = title+' +紹介文';
         subinfolist = fstudents.map(st => {
           //プロフィールURLを検索
@@ -1293,8 +1293,8 @@ function odai(message, data, command, ds, saying){
 async function hgacha(client, message, data, tools, characters){
 
   //■■発言取得
-  const msgs1 = await client.channels.get(data.DataSet.stTm['Himitsu']).fetchMessages({ limit:100 }); //東魔生徒
-  const msgs2 = await client.channels.get(data.DataSet.tcTm['Himitsu']).fetchMessages({ limit:100 }); //東魔教師
+  const msgs1 = await client.channels.cache.get(data.DataSet.stTm['Himitsu']).messages.fetch({ limit:100 }); //東魔生徒
+  const msgs2 = await client.channels.cache.get(data.DataSet.tcTm['Himitsu']).messages.fetch({ limit:100 }); //東魔教師
   const msgs = msgs1.concat(msgs2); //各ログをつなげます
   const hmtList = msgs.map(message => message.content).join('\n').split('\n').map(h => h.split('＠＠')) //ひみつデータ集ができました
   const hmtListOLD = hmtList.filter(h => h[3] !== '0'); //既出だけのひみつデータ集
@@ -1310,7 +1310,7 @@ async function hgacha(client, message, data, tools, characters){
   //■■サムネイルURL取得
   const today = new Date(); today.setHours(today.getHours() + 9);
   const tchid = ((today.getMonth()+1)+'/'+today.getDate() == '4/1') ? data.DataSet.april['Thumbnail'] : ds['Thumbnail'];
-  const tmsgs = await client.channels.get(tchid).fetchMessages({ limit:100 });
+  const tmsgs = await client.channels.cache.get(tchid).messages.fetch({ limit:100 });
   const tmsg = tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name) );
   const thumbnailurl = (tmsg) ? tmsg.split('：')[1] : data.noimage;
   
@@ -1319,7 +1319,7 @@ async function hgacha(client, message, data, tools, characters){
   const hmtI = hmt[1].split('＄＄');
   const imageurl = (hmtI.length==2) ? hmtI[1] : undefined;
   sendResult(message.channel, atitle, tools.emj(chr)+chr.name+'のひみつ㊙️ ',
-             hmtI[0], ds.color, ''/*client.users.get(hmt[2]).avatarURL*/, '🧙 マギカサーチ magisa', thumbnailurl, '', imageurl);
+             hmtI[0], ds.color, ''/*client.users.get(hmt[2]).displayAvatarURL()*/, '🧙 マギカサーチ magisa', thumbnailurl, '', imageurl);
   return;
 };
 async function qgacha(client, message, data, tools, characters, command){
@@ -1349,7 +1349,7 @@ async function qgacha(client, message, data, tools, characters, command){
   };
   
   //■■全クイズ取得
-  const msgs = await client.channels.get(data.quizlog).fetchMessages({ limit:100 });
+  const msgs = await client.channels.cache.get(data.quizlog).messages.fetch({ limit:100 });
   const quizlist = msgs.map(m=>m.content).join('\n').split('\n').map(m=>m.split('＠＠'));
   
   //■■クイズ取得
@@ -1383,14 +1383,14 @@ async function qgacha(client, message, data, tools, characters, command){
                 + (quiz.x.length>1 ? '⭕：'+quiz.x[0] + '\n\n❌：'+quiz.x[1] : quiz.x[0]);
   };
   
-  message.channel.send('',{embed:{
+  message.channel.send({embeds: [{
     author: {name:'ランダムマギカ！ for Q (全'+quizlist.length+'問)'},
     title:tools.emj(chr)+chr.name+'のクイズ'+(mode!=='出題'?'('+mode+')':'')+' ⭐'.repeat(quiz.d),
     description:description,
     color: ds.color,
     footer:{text:(mode=='出題' ? '「！ま　クイズ　名前　(ひらがなor半角英数字)」で回答！ ' : '')+'🧙 マギカサーチ magisa'},
     image: {url: (mode=='出題' ? quiz.i:'')},
-  }});
+  }]});
 
   return;
 };
@@ -1455,18 +1455,18 @@ function dataSearch(client, message, data, tools, students, command, ds){
 
 //■■　■■　■■　■■　■■　ヘルプ　■■　■■　■■　■■　■■
 function help(client, message, data, command, ds){
-  //const tch = client.channels.get(data.DataSet.stTm['HimitsuTarget']).name;
-  message.channel.send({embed: {
+  //const tch = client.channels.cache.get(data.DataSet.stTm['HimitsuTarget']).name;
+  message.channel.send({embeds: [{
     author: {
       name: '🧙 マギカサーチ magisa　ヘルプ',
-      icon_url: client.user.avatarURL
+      icon_url: client.user.displayAvatarURL()
     },
     description:
 `「マギカサーチ magisa」は、シェアワールド創作「東京魔力科(トーキョーマギカ)」のための機能群です。
 ほとんどのコマンドは「！ま」、「!魔」などに続けて記述することで機能します。(※当ヘルプでは単語どうしを空白・読点・改行で区切って並べることを「続ける」と表記します)
 2番目に「エーテル」「先生」「そのほか」「全体」等を入力することで「__ジャンル指定__」が可能です(デフォルトは東魔生徒です)。
 「！！ま」のように「！」を2つにすることでジャンル指定が「全体」になります。
-機能停止時はここにアクセスして少し待つと解決する場合があります。→ http://magicabot.glitch.me/`,
+${process.env.RENDER_EXTERNAL_URL ? '機能停止時はここにアクセスして少し待つと解決する場合があります。→ ' + process.env.RENDER_EXTERNAL_URL : ''}`,
     color: ds.color,
     footer:{text: data.updated},
     fields: [{ inline: true,
@@ -1528,7 +1528,7 @@ MagicaBotへDMで「■■の画像」とコメント付きで画像を投稿す
 わかんない。「玉ちゃん」と含まれる発言に反応して玉ちゃんが集まってきます。5人まで人数指定も可能で、「怒」に反応して怒ります。
 ※「玉ちゃん」だけだとプロフィール検索がされます。`
     }]
-  }});
+  }]});
   return;
 };
 
@@ -1537,8 +1537,8 @@ async function echaodai(message, data){
   const fs = require('fs');
   const content = data.characters.filter(c => c.genre == 'stTm').map(c => c.nickname.split(' - ')[0]).filter(c => c).join('\n');
   fs.writeFileSync("./magicaodai.txt", content);
-  await message.channel.send({ embed: {title:'MagicalDraw', url: 'https://kuku.lu/p117f6507',  description:'↑こちらからどうぞ！```パスワード : aam144```', color:0xFBE039,
-                                       thumbnail: {url: "https://draw.kuku.lu/apple-touch-icon.png"} } } );
+  await message.channel.send({embeds: [{title:'MagicalDraw', url: 'https://kuku.lu/p117f6507',  description:'↑こちらからどうぞ！```パスワード : aam144```', color:0xFBE039,
+                                       thumbnail: {url: "https://draw.kuku.lu/apple-touch-icon.png"} }] } );
   message.channel.send({ files: ['./magicaodai.txt'] } );
   return;
 };
@@ -1556,7 +1556,7 @@ function admin(client, message, data, command){
 
 //■■　■■　■■　■■　■■　embed送信機能　■■　■■　■■　■■　■■
 function sendResult(channel, authorname, title, description, color, footericonurl, footertext, thumbnailurl, content, imageurl){
-  const o = {embed: {
+  const o = {embeds: [{
     author: {name: authorname},
     title:title,
     description:description,
@@ -1565,9 +1565,9 @@ function sendResult(channel, authorname, title, description, color, footericonur
             text:footertext},
     thumbnail: {url: (thumbnailurl?thumbnailurl:undefined)},
     image: {url: (imageurl?imageurl:undefined)}
-  }};
-  if(Array.isArray(channel)) channel.forEach(ch => ch.send(content, o) );
-  else channel.send(content, o);
+  }]};
+  if(Array.isArray(channel)) channel.forEach(ch => ch.send({content: content || undefined, ...o}) );
+  else channel.send({content: content || undefined, ...o});
 };
 
 //■■　■■　■■　■■　■■　文字列変換機能　■■　■■　■■　■■　■■
@@ -1662,6 +1662,6 @@ function ReSymbolizeC(client, message, symbols, word, list0, list1){
   const listC = list1 + 'C';
   if(message.guild&&message.guild.id=='601573562070859800'&&symbols[listC]){ //ギルドidがあって、そのうえでジャンクヤードかを確認
     const ename = ReSymbolize(symbols, word, list0, listC);
-    return (word == ename||ename.match(/^:.+:$/)) ? ename : client.emojis.find(e => e.name == ename) ;
+    return (word == ename||ename.match(/^:.+:$/)) ? ename : client.emojis.cache.find(e => e.name == ename) ;
   }else{ return ReSymbolize(symbols, word, list0, list1); }; //ジャンクヤードじゃなければ普通にやるわね
 };
