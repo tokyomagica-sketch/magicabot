@@ -143,7 +143,7 @@ exports.ReSymbolizeC = function(client, message, symbols, word, list0, list1){
   const listC = list1 + 'C';
   if(message.guild&&(message.guild.id=='601573562070859800'||message.guild.id=='1306536641372094474')&&symbols[listC]){ //ギルドidがあって、そのうえでジャンクヤードかを確認
     const ename = exports.ReSymbolize(symbols, word, list0, listC);
-    return (word == ename||ename.match(/^:.+:$/)) ? ename : client.emojis.find(e => e.name == ename) ;
+    return (word == ename||ename.match(/^:.+:$/)) ? ename : client.emojis.cache.find(e => e.name == ename) ;
   }else{ return exports.ReSymbolize(symbols, word, list0, list1); }; //ジャンクヤードじゃなければ普通にやるわね
 };
 
