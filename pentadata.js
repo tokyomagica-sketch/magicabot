@@ -884,8 +884,8 @@ exports.eventlist = [
       };
     },
     endprocess: async (input) => {
-      const logch = input.client.channels.get(exports.speciallog);
-      const logs = await logch.fetchMessages({ limit: 100 });
+      const logch = input.client.channels.cache.get(exports.speciallog);
+      const logs = await logch.messages.fetch({ limit: 100 });
       const log = await logs.find((m) =>
         m.content.includes(input.message.author.id + " MYSTERY")
       );
@@ -922,7 +922,7 @@ exports.eventlist = [
     startprocess: async (input) => {
       const targets = await input.data.characters.filter(c => c.genre == "stTm").map(c => c.id);
       const answerId = targets[Math.floor(Math.random() * targets.length)];
-      input.client.channels.get(exports.speciallog).send(input.message.author.id + " PSEUDO " + answerId);
+      input.client.channels.cache.get(exports.speciallog).send(input.message.author.id + " PSEUDO " + answerId);
     },
     editprocess: (input) => {
       const answer = input.data.characters.find(cc => cc.id == input.log.content.split(" ")[2]).kana
@@ -1144,8 +1144,8 @@ exports.eventlist = [
       },
     ],
     startprocess: async (input) => {
-      const logch = input.client.channels.get(exports.speciallog);
-      const logs = await logch.fetchMessages({ limit: 100 });
+      const logch = input.client.channels.cache.get(exports.speciallog);
+      const logs = await logch.messages.fetch({ limit: 100 });
       const logRnum = logs
         .map((l) => l.content)
         .filter((m) => m.includes("SPORTS 赤")).length;
@@ -1218,8 +1218,8 @@ exports.eventlist = [
       };
     },
     endprocess: async (input) => {
-      const logch = input.client.channels.get(exports.speciallog);
-      const logs = await logch.fetchMessages({ limit: 100 });
+      const logch = input.client.channels.cache.get(exports.speciallog);
+      const logs = await logch.messages.fetch({ limit: 100 });
       const log = await logs.find((m) =>
         m.content.includes(input.message.author.id + " SPORTS")
       );
@@ -1703,8 +1703,8 @@ exports.eventlist = [
       return o;
     },
     endprocess: async (input) => {
-      const logch = input.client.channels.get(exports.speciallog);
-      const logs = await logch.fetchMessages({ limit: 100 });
+      const logch = input.client.channels.cache.get(exports.speciallog);
+      const logs = await logch.messages.fetch({ limit: 100 });
       const log = await logs.find((m) =>
         m.content.includes(input.message.author.id + " BEACH")
       );
@@ -1840,7 +1840,7 @@ exports.eventlist = [
                  + '魔対3年：0/魔対2年：0/魔対1年：0/魔動3年：0/魔動2年：0/魔動1年：0/'
                  + '魔視3年：0/魔視2年：0/魔視1年：0/魔装3年：0/魔装2年：0/魔装1年：0/'
                  + '魔変3年：0/魔変2年：0/魔変1年：0/魔魂3年：0/魔魂2年：0';
-      await input.client.channels.get(exports.speciallog).send(text);
+      await input.client.channels.cache.get(exports.speciallog).send(text);
       return;
     },
     specialprocess: (input) => {
@@ -1984,7 +1984,7 @@ exports.eventlist = [
       for(let i=0; i<8; i++) monsterlist.push(monstersR[i].id+'：'+targetidsR[i]);
       
       const text = input.message.author.id + ' HALLOWEEN' + '\n' + monsterlist.join('\n');
-      await input.client.channels.get(exports.speciallog).send(text);
+      await input.client.channels.cache.get(exports.speciallog).send(text);
       return;
     },
     specialprocess: (input) => {
@@ -2091,7 +2091,7 @@ exports.eventlist = [
     ],
     startprocess: async (input) => {
       const text = input.message.author.id + ' QUIZ\n回答済み';
-      await input.client.channels.get(exports.speciallog).send(text);
+      await input.client.channels.cache.get(exports.speciallog).send(text);
       return;
     },
     specialprocess: (input) => { //DMか確認。回答を受け付けて、回答済ログにidを追加するなどして スラッシュ区切りで あと未回答・回答済も確認したいな
@@ -2209,7 +2209,7 @@ exports.eventlist = [
     ],
     startprocess: async (input) => {
       const text = input.message.author.id + ' XMAS\n0'; //参加：1,3,8,10,23 未受取：80
-      await input.client.channels.get(exports.speciallog).send(text);
+      await input.client.channels.cache.get(exports.speciallog).send(text);
       return;
     },
     specialprocess: (input) => {
@@ -2359,7 +2359,7 @@ exports.eventlist = [
             raid.members=[];
             
             //討伐アナウンスを少し遅れて投稿したいなあ。
-            o.raidMessageObj =  {embed: {
+            o.raidMessageObj =  {embeds: [{
                                   author: {name:'イベントレイド'},
                                   title:'🎊 🎄'+tree.num+'. '+tree.name+'を'+(tree.type=='sdw'?'掃除':'討伐')+'した！ 🎊',
                                   description: tree.name + 'は' + ( (tree.type=='sdw') ? 'またひとつ祓われた。'
@@ -2370,7 +2370,7 @@ exports.eventlist = [
                                              + ((tree.type=='ex'&&tree.index==3) ? '\n🎄🎄🎄すべての大魔樹の討伐に成功した！！🎄🎄🎄' : '' )
                                              + '\n🎁報酬：⭐×' + tree.stars + ((tree.type=='ex'&&tree.index==3) ? ' 🎗️メモリアルリボン' : '' )
                                              + '\n▼討伐に参加したプレイヤーは、__次にMAGICA-PENTAをプレイした時__に報酬を受け取ることができます。'
-                                             + '\n' + oldmembers.map(mem=>'👤`'+input.client.users.get(mem.id).username + '(' + mem.damage + 'p)`').join(' ')
+                                             + '\n' + oldmembers.map(mem=>'👤`'+(input.client.users.cache.get(mem.id)?.username ?? "???") + '(' + mem.damage + 'p)`').join(' ')
                                              + '\n'
                                              + ((tree.type=='tree'&&tree.index==3) ? '\n切り倒した魔樹の根から新たな芽が生えてきた……？\n' : '' )
                                              + ((tree.type=='bud'&&raid.progress.number==12) ? '\n力を吸収した魔樹が、巨大な姿に化けて蘇った……！！\n' : '' )
@@ -2380,7 +2380,7 @@ exports.eventlist = [
                                              + '\n```' + newtree.intro + '```',
                                   color: (tree.type=='sdw'?0x5d00b0:tree.type=='ex'?0xa700b0:0xbe1c4a),
                                   footer:{text:input.pata.pentaname}
-                                }};
+                                }]};
           }
           
           //レイドログ書込
@@ -2774,7 +2774,7 @@ exports.eventlist = [
                   raid.members=[];
 
                   //討伐アナウンスを少し遅れて投稿したいなあ。
-                  o.raidMessageObj =  {embed: {
+                  o.raidMessageObj =  {embeds: [{
                                         author: {name:'イベントレイド'},
                                         title:'🎊 🎄'+tree.num+'. '+tree.name+'を'+(tree.type=='sdw'?'掃除':'討伐')+'した！ 🎊',
                                         description: tree.name + 'は' + ( (tree.type=='sdw') ? 'またひとつ祓われた。'
@@ -2785,7 +2785,7 @@ exports.eventlist = [
                                                    + ((tree.type=='ex'&&tree.index==3) ? '\n🎄🎄🎄すべての大魔樹の討伐に成功した！！🎄🎄🎄' : '' )
                                                    + '\n🎁報酬：⭐×' + tree.stars + ((tree.type=='ex'&&tree.index==3) ? ' 🎗️メモリアルリボン' : '' )
                                                    + '\n▼討伐に参加したプレイヤーは、__次にMAGICA-PENTAをプレイした時__に報酬を受け取ることができます。'
-                                                   + '\n' + oldmembers.map(mem=>'👤`'+i.client.users.get(mem.id).username + '(' + mem.damage + 'p)`').join(' ')
+                                                   + '\n' + oldmembers.map(mem=>'👤`'+(i.client.users.cache.get(mem.id)?.username ?? "???") + '(' + mem.damage + 'p)`').join(' ')
                                                    + '\n'
                                                    + ((tree.type=='tree'&&tree.index==3) ? '\n切り倒した魔樹の根から新たな芽が生えてきた……？\n' : '' )
                                                    + ((tree.type=='bud'&&raid.progress.number==12) ? '\n力を吸収した魔樹が、巨大な姿に化けて蘇った……！！\n' : '' )
@@ -2795,7 +2795,7 @@ exports.eventlist = [
                                                    + '\n```' + newtree.intro + '```',
                                         color: (tree.type=='sdw'?0x5d00b0:tree.type=='ex'?0xa700b0:0xbe1c4a),
                                         footer:{text:exports.pentaname}
-                                      }};
+                                      }]};
                 }
 
                 //■■■■■　レイドログ書込　■■■■■
@@ -2894,7 +2894,7 @@ exports.eventlist = [
     ],
     startprocess: async (input) => {
       const text = input.message.author.id + ' NEWYEAR\n0\n＠';
-      await input.client.channels.get(exports.speciallog).send(text);
+      await input.client.channels.cache.get(exports.speciallog).send(text);
       return;
     },
     specialprocess: (input) => {
@@ -20524,14 +20524,14 @@ exports.episodes = [
                            const quizline = i.quizlist.find(q=>q[0]==target.name);
                            quizline[1] = quizline[1].replace(/⏎/g, '\n').split(/^問題【|】解答【|】解説【|】難易度【|】$/)
                            const quiz = {q:quizline[1][1], d:Number(quizline[1][4]), i:quizline[2]};
-                           i.message.author.send('',{embed:{
+                           i.message.author.send({embeds: [{
                              author: {name:tools.emj(target)+target.name+' / 難易度：'+'⭐'.repeat(quiz.d)},
                              title:'🎓問題！',
                              description:quiz.q, //問題文
                              color: i.event.color,
                              footer:{text:'「！ぺい　名前　(ひらがなor半角英数字)」で回答！'},
                              image: {url: quiz.i},
-                           }});
+                           }]});
 
                            o.log.description = tools.emj(target)+target.name+'の問題をDMへ送信しました。\n'
                                              + '(未回答：' + targets.map(m=>tools.emj(m)).join('')
