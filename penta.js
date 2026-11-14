@@ -49,17 +49,17 @@ exports.main = async function(client, message){
   
   //■■プレイ
   if(player){ //■■登録版
-    const plogch = client.channels.get(pata.playerlog);  //プレイヤーログ保存場所
-    const plogs  = await plogch.fetchMessages({ limit:100 });
+    const plogch = client.channels.cache.get(pata.playerlog);  //プレイヤーログ保存場所
+    const plogs  = await plogch.messages.fetch({ limit:100 });
     const plog   = await plogs.find(m => m.content.includes(message.author.id)); //プレイヤーログメッセージ(読取・書込対象)
     
     if(command[0].match(/削除/)){
       plog.delete();
-      PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, 'ユーザーデータを削除しました。', '', pata.color);
+      PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), 'ユーザーデータを削除しました。', '', pata.color);
       return;};
 
     if(!plog && ftype!=='gacha'){ //ユーザーなし
-      PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, 'ユーザー登録がありません。', 'コマンド「！ぺが」などから初回ガチャを引くとユーザー登録がされます。', pata.color, '', '' );
+      PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), 'ユーザー登録がありません。', 'コマンド「！ぺが」などから初回ガチャを引くとユーザー登録がされます。', pata.color, '', '' );
     }
     else{ //ユーザーあり
       
@@ -98,8 +98,8 @@ exports.main = async function(client, message){
           
           //■■■お気に入り系ここから
           let fserifu='';
-          const flogch   = client.channels.get(pata.favoritelog);
-          const flogs    = await flogch.fetchMessages({ limit:100 });
+          const flogch   = client.channels.cache.get(pata.favoritelog);
+          const flogs    = await flogch.messages.fetch({ limit:100 });
           const flog     = await flogs.find(fv => fv.content.includes(message.author.id));
           if(flog){
             const favorite = flog.content.split('\n');
@@ -114,8 +114,8 @@ exports.main = async function(client, message){
               const allcards = plogc.map(lc => characters.find(c => c.sid == lc[0]));
               
               //セリフ
-              const smsgs1 = await client.channels.get(pata.fspserifulogL).fetchMessages({ limit:100 });
-              const smsgs2 = await client.channels.get(pata.fserifulogL).fetchMessages({ limit:100 });
+              const smsgs1 = await client.channels.cache.get(pata.fspserifulogL).messages.fetch({ limit:100 });
+              const smsgs2 = await client.channels.cache.get(pata.fserifulogL).messages.fetch({ limit:100 });
               const smsgs  = smsgs1.concat(smsgs2);
               const allsrflines = smsgs.map(message => message.content).join('\n').split('\n');
               let fchr;
@@ -134,7 +134,7 @@ exports.main = async function(client, message){
 
               let ti = 0; console.log('tchids : '+tchids);
               do{ console.log('ti : '+ti);
-                    const tmsgs = await client.channels.get(tchids[ti]).fetchMessages({ limit:100 });
+                    const tmsgs = await client.channels.cache.get(tchids[ti]).messages.fetch({ limit:100 });
                     const tmsg = await (tchids[ti]==pata.sptnlog||tchids[ti]==pata.maxtnlog||tchids[ti]==pata.extratnlog||(tchids[ti]==data.DataSet.april['Thumbnail']&&fchr.eventid&&fchr.eventid.match(/PSEUDO|SECRET/))) //完全一致の条件
                                  ? tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.split('：')[0]==fchr.name)
                                  : tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(fchr.name.split('(')[0]));
@@ -155,8 +155,8 @@ exports.main = async function(client, message){
             if(!event||(event&&event.id!==logevent[0])){ //今イベント時期でないか、今のイベントと違う
               const oldevent = pata.eventlist.find(e=>e.id==logevent[0]);
               
-              const splogch = client.channels.get(pata.speciallog);
-              const splogs = await splogch.fetchMessages({ limit: 100 });
+              const splogch = client.channels.cache.get(pata.speciallog);
+              const splogs = await splogch.messages.fetch({ limit: 100 });
               const splog = await splogs.find(m => m.content.includes(message.author.id + " "+oldevent.id) );
               
               //if(oldevent.endprocess){oldevent.endprocess({client:client, message:message, data:data});};
@@ -178,7 +178,7 @@ exports.main = async function(client, message){
             }
           };
           
-          const newsmessages = await client.channels.get(pata.newslog).fetchMessages({ limit:100 });
+          const newsmessages = await client.channels.cache.get(pata.newslog).messages.fetch({ limit:100 });
           description += '\n\n🆕 最近の更新情報 🆕\n'+newsmessages.first(2).map(m=>m.content).join('\n');
         };
         
@@ -189,7 +189,7 @@ exports.main = async function(client, message){
             const edescription = '🗓️期間 : '+ event.start.split('-').map(n=>n.replace(/^0+/,'')).join('/')
                                + ' ～ '   + event.end.split('-').map(n=>n.replace(/^0+/,'')).join('/')
                                + '```'     + event.description+'```ガチャ：「！ぺがい」 詳細：「！ぺい」';
-            await PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, etitle, edescription, event.color);
+            await PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), etitle, edescription, event.color);
           };
           if(!logitems[5]||logitems[5]=='0'){ //イベント参加情報がない → イベント参加情報付与
             const eventitemArray = new Array(event.item.length).fill(0);
@@ -203,7 +203,7 @@ exports.main = async function(client, message){
         await plog.edit(ploga.join('\n'));
       };
       if(description){
-        PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, title, description, pata.color, '', '', thumbnailurl);
+        PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), title, description, pata.color, '', '', thumbnailurl);
       };
       
       //■機能分岐
@@ -211,7 +211,7 @@ exports.main = async function(client, message){
                            message:message, command:command, commandorig:commandorig, ftype:ftype, player:player,
                            plogs:plogs, plog:plog, ploga:ploga, event:event};
       if     (ftype=='penta'||ftype=='pentatest'){ //ペンタ
-        if(ftype=='pentatest'&&command.length < 3) PentaResult(message.channel, '', '', '', 'コマンドに不足があります。', '', pata.color, message.author.avatarURL, pata.pentaname);
+        if(ftype=='pentatest'&&command.length < 3) PentaResult(message.channel, '', '', '', 'コマンドに不足があります。', '', pata.color, message.author.displayAvatarURL(), pata.pentaname);
         else{
           const testcards = (ftype=='pentatest') ? commandorig.slice(2) : [] ;
           penta(client, data, pata, tools, message, commandorig, player, testcards, plogch, plog, ploga, event);
@@ -223,14 +223,14 @@ exports.main = async function(client, message){
         if(plog && command[0].replace(/^が(ちゃ)?/, '').match(/^い(べ(んと)?)?/i)) special = 2;
         if(command[0].match(/ひ(ゃく)?$/)) hundred = true;
         if     (special==1&&ploga[3]&&ploga[3].split(':')[1]<1){ //チケットなし
-          PentaResult(message.channel, '', '', '', '', '🧧×'+Number(ploga[3].split(':')[1])+' 封筒が不足しています。\nプレイヤーLv上昇(10毎)した際に封筒を獲得できるほか、ショップでコイン🪙(c)を使って封筒を購入できます。', pata.color, message.author.avatarURL, pata.pentaname, '' );
+          PentaResult(message.channel, '', '', '', '', '🧧×'+Number(ploga[3].split(':')[1])+' 封筒が不足しています。\nプレイヤーLv上昇(10毎)した際に封筒を獲得できるほか、ショップでコイン🪙(c)を使って封筒を購入できます。', pata.color, message.author.displayAvatarURL(), pata.pentaname, '' );
         }
         else if(special!==1&&ploga[3]&&((!hundred&&ploga[3].split(':')[0]<1)||(hundred&&ploga[3].split(':')[0]<20))){ //チケットなし
-          PentaResult(message.channel, '', '', '', '', '🎫×'+Number(ploga[3].split(':')[0])+' チケットが不足しています。\nその日初めての'+pata.pentaname+'起動時、'+pata.pentaname+'での'+pata.ticketThreshold+'p達成時、プレイヤーLv上昇時などにチケットを獲得できるほか、ショップでコイン🪙(c)を使ってチケットを購入できます。', pata.color, message.author.avatarURL, pata.pentaname, '' );
+          PentaResult(message.channel, '', '', '', '', '🎫×'+Number(ploga[3].split(':')[0])+' チケットが不足しています。\nその日初めての'+pata.pentaname+'起動時、'+pata.pentaname+'での'+pata.ticketThreshold+'p達成時、プレイヤーLv上昇時などにチケットを獲得できるほか、ショップでコイン🪙(c)を使ってチケットを購入できます。', pata.color, message.author.displayAvatarURL(), pata.pentaname, '' );
         }
         else{
           if(special==2&&!event){ special = 0;
-            await PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, '', '現在開催されているイベントはありません。通常のガチャを行います。', pata.color);
+            await PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), '', '現在開催されているイベントはありません。通常のガチャを行います。', pata.color);
           };
           pentagacha(client, data, pata, tools, message, command, plogch, plog, ploga, event, special, hundred);
         }; //チケットあり
@@ -309,7 +309,7 @@ async function penta(client, data, pata, tools, message, command, player, testca
     const regname = /(先生|せんせい|せんせー|先輩|せんぱい|ぱいせん|部長|ぶちょう|委員長|いいんちょう)$/g ;
     if(command[1].match(regname)) command[1] = command[1].replace(regname, '');
     const chr = await tools.getCharacter(characters, command[1]);
-    const playericon = (player) ? message.author.avatarURL : '' ;
+    const playericon = (player) ? message.author.displayAvatarURL() : '' ;
     if(chr == 'multiple') PentaResult(message.channel, '', '', '', '', command[1]+'は複数のキャラに使用されています。表記を変更してお試しください。', pata.color, playericon, pentaname);
     else if(!chr){
       const aObj = tools.convertAlias(data.authors, command[1].split(data.authorunit)[0], 'name', 'alias');
@@ -360,14 +360,14 @@ async function penta(client, data, pata, tools, message, command, player, testca
                                      });
            if(cards.some(tc=>!tc.id)){
              await loading.delete();
-             PentaResult(message.channel, '', '', '', '', cards.find(tc=>!tc.id)+'は複数のキャラに使用されているか、データにありませんでした。表記を変更してお試しください。', pata.color, ((player)?message.author.avatarURL:''), pentaname);
+             PentaResult(message.channel, '', '', '', '', cards.find(tc=>!tc.id)+'は複数のキャラに使用されているか、データにありませんでした。表記を変更してお試しください。', pata.color, ((player)?message.author.displayAvatarURL():''), pentaname);
              return;
            };
            if(([...new Set(cards.map(c=>c.id.slice(0,4)))].length<cards.length)
              ||(Tcards.length&&[...new Set(Tcards.map(c=>c.id.slice(0,4)))].length<Tcards.length)){
              console.log('・ドロー結果(重複) : '+cards.map(c => c.id)+(Tcards.length?' / '+Tcards.map(c=>c.id):''));
              await loading.delete();
-             PentaResult(message.channel, '', '', '', '', 'キャラが重複しています。内容を変更してお試しください。\n※ランダムテストを行っている場合、ランダム節は自身より前の節との重複回避のみが可能であることにご留意ください。', pata.color, ((player)?message.author.avatarURL:''), pentaname);
+             PentaResult(message.channel, '', '', '', '', 'キャラが重複しています。内容を変更してお試しください。\n※ランダムテストを行っている場合、ランダム節は自身より前の節との重複回避のみが可能であることにご留意ください。', pata.color, ((player)?message.author.displayAvatarURL():''), pentaname);
              return;
            };
           }
@@ -413,19 +413,19 @@ async function penta(client, data, pata, tools, message, command, player, testca
   
     const logheader = '■■■■■' + message.author.id + ' ' + message.author.username;
   //■効果記録
-    const klogch = client.channels.get(pata.keeplog);
+    const klogch = client.channels.cache.get(pata.keeplog);
     let klog = undefined;
     let keepsbefore = [logheader];
-    if(player){const klogs  = await klogch.fetchMessages({ limit:100 });
+    if(player){const klogs  = await klogch.messages.fetch({ limit:100 });
                klog = await klogs.find(m => m.content.includes(message.author.id));
                if(klog){ keepsbefore = klog.content.split('\n'); };
               };
     const keeps = Array.from(keepsbefore); keeps[0] = logheader;
   //■設定記録
-    const slogch = client.channels.get(pata.settingslog);
+    const slogch = client.channels.cache.get(pata.settingslog);
     let slog = undefined;
     let settingsbefore = [logheader, 'none', 'favorite', 'favorite', 'テーマ/df/df', 'My効果/df/df'];
-    if(player){const slogs  = await slogch.fetchMessages({ limit:100 });
+    if(player){const slogs  = await slogch.messages.fetch({ limit:100 });
                slog = await slogs.find(set => set.content.includes(message.author.id));
                
                //ここからふっとんだ 2022.09.21
@@ -437,7 +437,7 @@ async function penta(client, data, pata, tools, message, command, player, testca
     let splogs = undefined;
     let speciallog = undefined;
     let speciallogcontent = undefined;
-    if(player&&event){splogs = await client.channels.get(pata.speciallog).fetchMessages({ limit:100 });
+    if(player&&event){splogs = await client.channels.cache.get(pata.speciallog).messages.fetch({ limit:100 });
                       speciallog = await splogs.find(m => m.content.includes(message.author.id+' '+event.id));
                      };
     let raidlog = undefined;
@@ -445,19 +445,19 @@ async function penta(client, data, pata, tools, message, command, player, testca
   //■クイズログとか
     let quizlist = undefined;
     if(!test&&player&&event&&event.id=='QUIZ'){
-      const qlogs = await client.channels.get(pata.quizlog).fetchMessages({ limit:100 });
+      const qlogs = await client.channels.cache.get(pata.quizlog).messages.fetch({ limit:100 });
       quizlist = qlogs.map(m=>m.content).join('\n').split('\n').map(m=>m.split('＠＠'));
     };
   //■かるたログとか
     let cartalist = undefined;
     if(!test&&player&&event&&event.id=='NEWYEAR'){
-      const clogs = await client.channels.get(pata.cartalog).fetchMessages({ limit:100 });
+      const clogs = await client.channels.cache.get(pata.cartalog).messages.fetch({ limit:100 });
       cartalist = clogs.map(m=>m.content).join('\n').split('\n').map(m=>{const line = m.split('＠＠'); return {head:line[0], text:line[1], ids:line[2].split('・')}});
     };
   //■その他セリフが必要なときは使って
     let omsgs = [];
     if(player&&klog&&( klog.content.includes('キャンプカレー/7')  )){
-      omsgs=await client.channels.get(pata.otherserifulog).fetchMessages({ limit:100 });
+      omsgs=await client.channels.cache.get(pata.otherserifulog).messages.fetch({ limit:100 });
     };
   //■事後投稿
     let raidMessageObj = undefined;
@@ -475,7 +475,7 @@ async function penta(client, data, pata, tools, message, command, player, testca
       if(o){ //処理がされていた場合
         if(o.error){
           console.log('エラー送信 '+o.title);
-          client.channels.get(pata.errorlog).send('【ERROR】```'+'\n効果名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
+          client.channels.cache.get(pata.errorlog).send('【ERROR】```'+'\n効果名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
           message.channel.send('```ERROR : 【'+o.title+'】\n効果エラーが発生したため、開発者へ情報を送信しました。該当効果を適用せずに続行します。```');
         }else{
           console.log('→ '+o.log.title+'発動');
@@ -520,7 +520,7 @@ async function penta(client, data, pata, tools, message, command, player, testca
         if(o){ //処理がされていた場合
           if(o.error){
             console.log('エラー送信 '+o.title);
-            client.channels.get(pata.errorlog).send('【ERROR】```カード名 : '+characters.find(ac=>ac.id==c.id).name+'\n効果名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
+            client.channels.cache.get(pata.errorlog).send('【ERROR】```カード名 : '+characters.find(ac=>ac.id==c.id).name+'\n効果名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
             message.channel.send('```ERROR : 【'+o.title+'】\n効果エラーが発生したため、開発者へ情報を送信しました。該当効果を適用せずに続行します。```');
           }else{
             console.log('→ '+o.log.title+'発動');
@@ -637,7 +637,7 @@ async function penta(client, data, pata, tools, message, command, player, testca
           if(o){ //処理がされていた場合
             if(o.error){
               console.log('エラー送信 '+o.title);
-              client.channels.get(pata.errorlog).send('【ERROR】```カード名 : '+characters.find(ac=>ac.id==c.id).name+'\n効果名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
+              client.channels.cache.get(pata.errorlog).send('【ERROR】```カード名 : '+characters.find(ac=>ac.id==c.id).name+'\n効果名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
               message.channel.send('```ERROR : 【'+o.title+'】\n効果エラーが発生したため、開発者へ情報を送信しました。該当効果を適用せずに続行します。```');
             }else{
               console.log('→ '+o.log.title+'発動');
@@ -688,7 +688,7 @@ async function penta(client, data, pata, tools, message, command, player, testca
         //■■■発動した場合
         if(o){ //処理がされていた場合
           if(o.error){console.log('エラー送信 '+o.title);
-                      client.channels.get(pata.errorlog).send('【ERROR】```特殊ドロー名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
+                      client.channels.cache.get(pata.errorlog).send('【ERROR】```特殊ドロー名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
                       message.channel.send('```ERROR : 【'+o.title+'】\n特殊ドローエラーが発生したため、開発者へ情報を送信しました。該当特殊ドローを適用せずに続行します。```'); return ;};
           console.log('→ '+o.log.title+'発動');
           //■■追加
@@ -797,7 +797,7 @@ async function penta(client, data, pata, tools, message, command, player, testca
             if(o){ //処理がされていた場合
               if(o.error){
                 console.log('エラー送信 '+o.title);
-                client.channels.get(pata.errorlog).send('【ERROR】```カード名 : '+characters.find(ac=>ac.id==c.id).name+'\n効果名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
+                client.channels.cache.get(pata.errorlog).send('【ERROR】```カード名 : '+characters.find(ac=>ac.id==c.id).name+'\n効果名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
                 message.channel.send('```ERROR : 【'+o.title+'】\n効果エラーが発生したため、開発者へ情報を送信しました。該当効果を適用せずに続行します。```');
               }else{
                 console.log('→ '+o.log.title+'発動');
@@ -859,7 +859,7 @@ async function penta(client, data, pata, tools, message, command, player, testca
     //■■■発動した場合
     if(o){ //処理がされていた場合
       if(o.error){console.log('エラー送信 '+o.title);
-                  client.channels.get(pata.errorlog).send('【ERROR】```エピソード名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
+                  client.channels.cache.get(pata.errorlog).send('【ERROR】```エピソード名 : '+o.title+'\n'+o.message+'\n'+cards.map(c=>c.id).join('　')+'```');
                   message.channel.send('```ERROR : 【'+o.title+'】\nエピソード効果エラーが発生したため、開発者へ情報を送信しました。該当エピソード効果を適用せずに続行します。```'); return ;};
       console.log('→ '+o.log.title+'発動');
       //■■トータル
@@ -912,12 +912,12 @@ async function penta(client, data, pata, tools, message, command, player, testca
   
   //■■■■■■■■■■ログ処理■■■■■■■■■■
   if(isNaN(totalP)){  console.log('エラー送信 合計点数値エラー');
-                      client.channels.get(pata.errorlog).send('【ERROR】```totalPが数値ではない\n'+cards.map(c=>c.id).join('　')+'```');
+                      client.channels.cache.get(pata.errorlog).send('【ERROR】```totalPが数値ではない\n'+cards.map(c=>c.id).join('　')+'```');
                       await loading.delete();
                       message.channel.send('```ERROR\n数値エラーが発生したため、開発者へ情報を送信しました。```');
                       return; };
   if(isNaN(bonusC)){  console.log('エラー送信 コイン数値エラー');
-                      client.channels.get(pata.errorlog).send('【ERROR】```bonusCが数値ではない\n'+cards.map(c=>c.id).join('　')+'```');
+                      client.channels.cache.get(pata.errorlog).send('【ERROR】```bonusCが数値ではない\n'+cards.map(c=>c.id).join('　')+'```');
                       await loading.delete();
                       message.channel.send('```ERROR\n数値エラーが発生したため、開発者へ情報を送信しました。```');
                       return; };
@@ -965,8 +965,8 @@ async function penta(client, data, pata, tools, message, command, player, testca
         const eventresult = [];
         
         let fcard;
-        const slogch   = client.channels.get(pata.settingslog);
-        const slogs    = await slogch.fetchMessages({ limit:100 });
+        const slogch   = client.channels.cache.get(pata.settingslog);
+        const slogs    = await slogch.messages.fetch({ limit:100 });
         const slog     = await slogs.find(set => set.content.includes(message.author.id));
         if(slog){ const settings = slog.content.split('\n');
                   if(settings[1]!=='none') fcard = characters.find(c => c.id == settings[1]); };
@@ -1056,7 +1056,7 @@ async function penta(client, data, pata, tools, message, command, player, testca
   
   if(player&&!test&&event&&event.editprocess) description = event.editprocess({data:data, log:speciallog, description:description, oldploga:oldploga, ploga:ploga }); 
   if(tm.spname) description = description.replace(tm.spname, tm.spnewname());
-  const playericon = (player) ? message.author.avatarURL : '' ;
+  const playericon = (player) ? message.author.displayAvatarURL() : '' ;
   const fields = prefields.map(f=>{return {name:f.name, value:(f.description)?f.description:f.value}});
   let imageurl = '';
   
@@ -1065,7 +1065,7 @@ async function penta(client, data, pata, tools, message, command, player, testca
   //■■■■■プレイヤー版
   if(player){
     //■■■■■テーマ画像部分
-    const sozai = await client.channels.get(pata.sozailog).fetchMessages({ limit:100 });
+    const sozai = await client.channels.cache.get(pata.sozailog).messages.fetch({ limit:100 });
     const szMsg = sozai.find(s=>s.content.slice(0,2)==tm.id);
     if(szMsg){
       const szImgs = szMsg.content.split('\n').filter(l=>l!==tm.id);
@@ -1081,19 +1081,19 @@ async function penta(client, data, pata, tools, message, command, player, testca
     };
     //■■■■■ベストスコア記録
     if(best){
-      const bmsgs = await client.channels.get(pata.bestscorelog).fetchMessages({ limit:100 });
+      const bmsgs = await client.channels.cache.get(pata.bestscorelog).messages.fetch({ limit:100 });
       // const bmsg  = bmsgs.find(m=>m.content.split('\n')[0] == message.author.id);
       // if(bmsg) bmsg.delete();
       const themename = (tm.id=='df')?'':'  '+tm.name ;
-      await PentaResult(client.channels.get(pata.bestscorelog), message.author.id+'\n'+content, pentamessage+'🏆再現', authoriconurl, title, description, tm.color, playericon, pentaname+themename+'  再現:'+tools.getDateText(), '', fields, imageurl);
+      await PentaResult(client.channels.cache.get(pata.bestscorelog), message.author.id+'\n'+content, pentamessage+'🏆再現', authoriconurl, title, description, tm.color, playericon, pentaname+themename+'  再現:'+tools.getDateText(), '', fields, imageurl);
       console.log('■■■ベストスコア記録■■■');
     };
     if(worst){
-      const wmsgs = await client.channels.get(pata.worstscorelog).fetchMessages({ limit:100 });
+      const wmsgs = await client.channels.cache.get(pata.worstscorelog).messages.fetch({ limit:100 });
       // const wmsg  = wmsgs.find(m=>m.content.split('\n')[0] == message.author.id);
       // if(wmsg) wmsg.delete();
       const themename = (tm.id=='df')?'':'  '+tm.name ;
-      await PentaResult(client.channels.get(pata.worstscorelog), message.author.id+'\n'+content, pentamessage+'💥再現', authoriconurl, title, description, tm.color, playericon, pentaname+themename+'  再現:'+tools.getDateText(), '', fields, imageurl);
+      await PentaResult(client.channels.cache.get(pata.worstscorelog), message.author.id+'\n'+content, pentamessage+'💥再現', authoriconurl, title, description, tm.color, playericon, pentaname+themename+'  再現:'+tools.getDateText(), '', fields, imageurl);
       console.log('■■■ワーストスコア記録■■■');
     };
   };
@@ -1101,8 +1101,8 @@ async function penta(client, data, pata, tools, message, command, player, testca
   //■■■■■■■■■■投稿■■■■■■■■■■
   await PentaResult(message.channel, content, pentamessage+bestscoremessage, authoriconurl, title, description, tm.color, playericon, pentaname+footertxt, '', fields, imageurl);
   if(player&&Number(ploga[6].split(':')[1])%10000==0) await PentaResult(message.channel, '', 'プレイヤー：'+(message.member?message.member.displayName:message.author.username), playericon, '🎊MAGICA-PENTA プレイ回数'+Number(ploga[6].split(':')[1])+'達成！', 'いっぱい遊んでくれてありがとう！', pata.color, '', pata.pentaname );
-  if(raidMessageObj) await message.channel.send('',raidMessageObj);
-  if(raidMessageObj) await client.channels.get(pata.magicapentach).send('',raidMessageObj); //PENTAチャンネルです
+  if(raidMessageObj) await message.channel.send(raidMessageObj);
+  if(raidMessageObj) await client.channels.cache.get(pata.magicapentach).send(raidMessageObj); //PENTAチャンネルです
   console.log('■■■メッセージ投稿完了■■■');
   
   console.log('▲▲▲'+message.author.username);
@@ -1331,7 +1331,7 @@ async function pentaprofile(cmndchr, ownedcards, client, data, pata, tools, mess
                         {name:'その他',                      serifulog:pata.otherserifulog                                            }];
     for(let i=0; i<serifudata.length; i++){
       const sd = serifudata[i];
-      const smsgs = await client.channels.get(sd.serifulog).fetchMessages({ limit:100 });
+      const smsgs = await client.channels.cache.get(sd.serifulog).messages.fetch({ limit:100 });
       const srflines  = smsgs.map(message => message.content).reverse().join('\n').split('\n').filter(line => line.includes(chr.name+'＠＠') );
       if(srflines.length>0) fields.push({name :'💬'+sd.name+(srflines.length>1?' ('+(srflines.length>8?'⚠️':'')+srflines.length+'種)':''),
                                          value:'```'+srflines.map(srfline => '「' + srfline.split('＠＠')[1] + '」' + (sd.name=='その他' ? '('+srfline.split('＠＠')[2]+')' : '') ).join('\n\n')+'```'
@@ -1385,7 +1385,7 @@ async function pentaprofile(cmndchr, ownedcards, client, data, pata, tools, mess
     const position = (chr.position)? '\n立場：'+chr.position : '';
     const relation = (chr.relation!==' - ')? '\n縁：'+chr.relation : '';
 
-    const pfms = await client.channels.get(ds['Profile']).fetchMessages({ limit:100 });
+    const pfms = await client.channels.cache.get(ds['Profile']).messages.fetch({ limit:100 });
     const pfl = (chr.notion) ? '\n[🔗詳細(Notion)](' +chr.notion + ')' : '';
 
     description = chr.subname+' ['+chr.author+']\n'
@@ -1396,7 +1396,7 @@ async function pentaprofile(cmndchr, ownedcards, client, data, pata, tools, mess
     //■■■■■fields系の処理
     //セリフ
     const serifulog = (april&&!chr.eventid) ? pata.aprilserifulog : pata.serifulog;
-    const smsgs   = await client.channels.get(serifulog).fetchMessages({ limit:100 });
+    const smsgs   = await client.channels.cache.get(serifulog).messages.fetch({ limit:100 });
     const srfline = smsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name+'＠＠') );
     if(srfline) fields.push({ name:'💬取得時のセリフ'+(april?'(__4/1__限定)':''), value:'```「' + srfline.split('＠＠')[1] + '」```' });
     
@@ -1442,7 +1442,7 @@ async function pentaprofile(cmndchr, ownedcards, client, data, pata, tools, mess
 
   let ti = 0; console.log('tchids : '+tchids);
   do{ console.log('ti : '+ti);
-        const tmsgs = await client.channels.get(tchids[ti]).fetchMessages({ limit:100 });
+        const tmsgs = await client.channels.cache.get(tchids[ti]).messages.fetch({ limit:100 });
         const tmsg = await (tchids[ti]==pata.sptnlog||tchids[ti]==pata.maxtnlog||tchids[ti]==pata.extratnlog||(tchids[ti]==data.DataSet.april['Thumbnail']&&chr.eventid&&chr.eventid.match(/PSEUDO|SECRET/))) //完全一致の条件
                      ? tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.split('：')[0]==chr.name)
                      : tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name.split('(')[0]));
@@ -1453,7 +1453,7 @@ async function pentaprofile(cmndchr, ownedcards, client, data, pata, tools, mess
   if(!thumbnailurl) thumbnailurl = data.noimage;
   
   //■■■■■送ります
-  PentaResult(message.channel, '', 'カードデータ表示', ((player)?message.author.avatarURL:''),
+  PentaResult(message.channel, '', 'カードデータ表示', ((player)?message.author.displayAvatarURL():''),
               title, description, pata.raritycolor(chr), '', pata.pentaname, thumbnailurl, fields);
   
   console.log('▲▲▲'+message.author.username);
@@ -1518,8 +1518,8 @@ async function pentagacha(client, data, pata, tools, message, command, plogch, p
                        type='封筒';    num=1;  info=pata.rarityinfoB(); }
   
   else if(special==2){ allcards=await orcards.concat(spcardssc).concat(spcards.filter(s=>s.eventid==event.id&&!event.giftids.includes(s.id)));
-                       const logch = client.channels.get(pata.speciallog);
-                       const logs  = await logch.fetchMessages({ limit:100 });
+                       const logch = client.channels.cache.get(pata.speciallog);
+                       const logs  = await logch.messages.fetch({ limit:100 });
                        const log   = await logs.find(m => m.content.includes(message.author.id+' '+event.id));
                        const Epickup = event.pickup(allcards, log); console.log('Epickup : '+Epickup);
                        type='イベント'; num=5;  info=(event&&event.rws)?pata.rarityinfo(Epickup, event.rws):pata.rarityinfo(Epickup);
@@ -1594,7 +1594,7 @@ async function pentagacha(client, data, pata, tools, message, command, plogch, p
       let srfline;
       if(level==0||april){
         const serifulog = (april&&!c.eventid) ? pata.aprilserifulog : pata.serifulog;
-        const smsgs = await client.channels.get(serifulog).fetchMessages({ limit:100 });
+        const smsgs = await client.channels.cache.get(serifulog).messages.fetch({ limit:100 });
         srfline = smsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(c.name+'＠＠') );
       }
       const introduction = (srfline) ? '\n```「' + srfline.split('＠＠')[1] + '」```' : '';
@@ -1616,7 +1616,7 @@ async function pentagacha(client, data, pata, tools, message, command, plogch, p
       
       let ti = 0;
       do{
-        const tmsgs = await client.channels.get(tchids[ti]).fetchMessages({ limit:100 });
+        const tmsgs = await client.channels.cache.get(tchids[ti]).messages.fetch({ limit:100 });
         const tmsg = await (tchids[ti]==pata.sptnlog||tchids[ti]==pata.maxtnlog||tchids[ti]==pata.extratnlog||(tchids[ti]==data.DataSet.april['Thumbnail']&&c.eventid&&c.eventid.match(/PSEUDO|SECRET/))) //完全一致の条件
                      ? tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.split('：')[0]==c.name)
                      : tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(c.name.split('(')[0]));
@@ -1628,8 +1628,8 @@ async function pentagacha(client, data, pata, tools, message, command, plogch, p
       
       //■■ 発言作成：メッセージ送信
       const color = (c.eventid) ? pata.eventlist.find(e=>e.id == c.eventid).color : pata.colorr[c.rarity];
-      //await PentaResult(message.channel, '', 'GET! '+pata.raritytext(c), message.author.avatarURL, tools.emj(c)+c.name+count, description, color, '', '', thumbnailurl);
-      ResultCards.push([message.channel, '', 'GET! '+pata.raritytext(c), message.author.avatarURL, tools.emj(c)+c.name+count, description, color, '', '', thumbnailurl]);
+      //await PentaResult(message.channel, '', 'GET! '+pata.raritytext(c), message.author.displayAvatarURL(), tools.emj(c)+c.name+count, description, color, '', '', thumbnailurl);
+      ResultCards.push([message.channel, '', 'GET! '+pata.raritytext(c), message.author.displayAvatarURL(), tools.emj(c)+c.name+count, description, color, '', '', thumbnailurl]);
     };
     
     //■■■■■ 一覧用の文章を作成 ここにある理由は「countを使うから」
@@ -1685,7 +1685,7 @@ async function pentagacha(client, data, pata, tools, message, command, plogch, p
   //■■■■■ログ書込
   const sent = await message.channel.send('書込中 そのままお待ちください...');
   if(type=='初回') {await plogch.send(ploga.join('\n'));
-                   await client.channels.get(pata.settingslog).send([ploga[0],'none','random','random','テーマ/df/df','My効果/df/df'].join('\n'));}
+                   await client.channels.cache.get(pata.settingslog).send([ploga[0],'none','random','random','テーマ/df/df','My効果/df/df'].join('\n'));}
   else             await plog.edit(ploga.join('\n'));
   console.log('■ログ書込完了 : '+ploga.join('\n　'));
   sent.delete();
@@ -1756,7 +1756,7 @@ async function pentagacha(client, data, pata, tools, message, command, plogch, p
   
   //■■■■■■■■■■メッセージ送信■■■■■■■■■■
   await ResultCards.forEach(result=>PentaResult(...result));
-  await PentaResult(message.channel, Rcontent, '', '', Rtitle, Rdescription, color, message.author.avatarURL, pata.pentaname, '', fields);
+  await PentaResult(message.channel, Rcontent, '', '', Rtitle, Rdescription, color, message.author.displayAvatarURL(), pata.pentaname, '', fields);
   console.log('■■■メッセージ投稿完了■■■');
   
   console.log('▲▲▲'+message.author.username);
@@ -1829,8 +1829,8 @@ async function pentazukan({client, data, pata, tools, message, command, ploga, e
   
   //■■■お気に入り系ここから
   let fserifu=''; let favcards=''; let myfx = ''; let thumbnailurl='';
-  const slogch   = client.channels.get(pata.settingslog);
-  const slogs    = await slogch.fetchMessages({ limit:100 });
+  const slogch   = client.channels.cache.get(pata.settingslog);
+  const slogs    = await slogch.messages.fetch({ limit:100 });
   const slog     = await slogs.find(set => set.content.includes(message.author.id));
   if(slog){
     const settings = slog.content.split('\n'); console.log(settings);
@@ -1838,8 +1838,8 @@ async function pentazukan({client, data, pata, tools, message, command, ploga, e
       const fid = (!settings[3]||settings[3]=='favorite') ? settings[1] : settings[3]; console.log('fid : '+fid);
       
       //セリフ
-      const smsgs1 = await client.channels.get(pata.fspserifulogS).fetchMessages({ limit:100 });
-      const smsgs2 = await client.channels.get(pata.fserifulogS).fetchMessages({ limit:100 });
+      const smsgs1 = await client.channels.cache.get(pata.fspserifulogS).messages.fetch({ limit:100 });
+      const smsgs2 = await client.channels.cache.get(pata.fserifulogS).messages.fetch({ limit:100 });
       const smsgs  = smsgs1.concat(smsgs2);
       const allsrflines = smsgs.map(message => message.content).join('\n').split('\n');
       let fchr;
@@ -1859,7 +1859,7 @@ async function pentazukan({client, data, pata, tools, message, command, ploga, e
 
       let ti = 0; console.log('tchids : '+tchids);
       do{ console.log('ti : '+ti);
-            const tmsgs = await client.channels.get(tchids[ti]).fetchMessages({ limit:100 });
+            const tmsgs = await client.channels.cache.get(tchids[ti]).messages.fetch({ limit:100 });
             const tmsg = await (tchids[ti]==pata.sptnlog||tchids[ti]==pata.maxtnlog||tchids[ti]==pata.extratnlog||(tchids[ti]==data.DataSet.april['Thumbnail']&&fchr.eventid&&fchr.eventid.match(/PSEUDO|SECRET/))) //完全一致の条件
                          ? tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.split('：')[0]==fchr.name)
                          : tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(fchr.name.split('(')[0]));
@@ -1902,7 +1902,7 @@ async function pentazukan({client, data, pata, tools, message, command, ploga, e
                     //+ '\n最終日：' + ploga[2]
                     + '\nガチャ：' + logcounter[0] + '回'
                     + '\nPENTA：' + logcounter[1] + '回' + favcards + eventtext ;
-  PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, title, description, tm.color, '', '', thumbnailurl );
+  PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), title, description, tm.color, '', '', thumbnailurl );
 
   if(!(command[1]&&command[1].match(/^(すてーたす|ステータス)/))){
     const listname = ['通常','特殊'];
@@ -1945,7 +1945,7 @@ async function pentazukan({client, data, pata, tools, message, command, ploga, e
 
         const catalog = resultlist.join('\n');
 
-        if(newlist.some(c=>c.collected>0)) PentaResult(message.channel, '', '', '', playername+'の'+listname[li]+'カード一覧'+titlegname+((li)?'':' '+ bunshi+'/'+bumbo+flower), catalog, tm.color, message.author.avatarURL, pata.pentaname, '' );
+        if(newlist.some(c=>c.collected>0)) PentaResult(message.channel, '', '', '', playername+'の'+listname[li]+'カード一覧'+titlegname+((li)?'':' '+ bunshi+'/'+bumbo+flower), catalog, tm.color, message.author.displayAvatarURL(), pata.pentaname, '' );
       };
     });
   };
@@ -1996,14 +1996,14 @@ async function pentashop({client, data, pata, tools, message, command, plog, plo
     console.log('■■■表示■■■');
     let thumbnailurl = ''; let shopserifu = '';
     if(mode=='secret'){
-      const smsgs = await client.channels.get(pata.shopserifulog).fetchMessages({ limit:100 });
+      const smsgs = await client.channels.cache.get(pata.shopserifulog).messages.fetch({ limit:100 });
       const srflines = smsgs.map(message => message.content).join('\n').split('\n');
       const srfline = srflines[Math.floor(Math.random()*srflines.length)];
       const chr = data.characters.find(c => c.name == srfline.split('＠＠')[0]);
       shopserifu = tools.emj(chr)+chr.name+'\n```「'+srfline.split('＠＠')[1]+'」```\n';
     }
     else if(mode=='event'){
-      const smsgs = await client.channels.get(pata.eshopserifulog).fetchMessages({ limit:100 });
+      const smsgs = await client.channels.cache.get(pata.eshopserifulog).messages.fetch({ limit:100 });
       const srflines = smsgs.map(message => message.content).join('\n').split('\n').filter(l=>l.split('＠＠')[2]==event.id);
       if(srflines.length>0){
         const srfline = srflines[Math.floor(Math.random()*srflines.length)];
@@ -2044,25 +2044,25 @@ async function pentashop({client, data, pata, tools, message, command, plog, plo
                                  + ( (item.itemToGet=='coin') ? '→🪙'+item.numToGet.toLocaleString()+'c' : '' )
                                  + ' 🆔'+item.id+((item.description)?'```'+item.description+'```':'\n');
                         }).join('──────────────────\n');
-    PentaResult(message.channel, '', shopname, message.author.avatarURL, ((mode=='secret')?'😈取引':'🛍️商品')+'一覧'+titleadd, description, color, '', pata.pentaname, thumbnailurl);
+    PentaResult(message.channel, '', shopname, message.author.displayAvatarURL(), ((mode=='secret')?'😈取引':'🛍️商品')+'一覧'+titleadd, description, color, '', pata.pentaname, thumbnailurl);
   }
   else if(command.length==2){ //■■■購入操作
-    if(mode=='normal'&&command[0].match(/う$/)){PentaResult(message.channel, '', shopname, message.author.avatarURL, ((message.guild===null)?'取引に必要なものをお持ちではないとお見受けしますが……。':'「！ぺしう」というコマンドはありませんよ。'), '', color, '', pata.pentaname);return;};
+    if(mode=='normal'&&command[0].match(/う$/)){PentaResult(message.channel, '', shopname, message.author.displayAvatarURL(), ((message.guild===null)?'取引に必要なものをお持ちではないとお見受けしますが……。':'「！ぺしう」というコマンドはありませんよ。'), '', color, '', pata.pentaname);return;};
     
     const logthemes     = ploga[7].split('/');
     const logthemeslist = logthemes[1].split(' ');
     
     const logheader = '■■■■■' + message.author.id + ' ' + message.author.username;
-    const slogch = client.channels.get(pata.settingslog);
+    const slogch = client.channels.cache.get(pata.settingslog);
     let settingsbefore = [logheader, 'none', 'favorite', 'favorite', 'テーマ/df/df', 'My効果/df/df'];
-    const slogs = await slogch.fetchMessages({ limit:100 });
+    const slogs = await slogch.messages.fetch({ limit:100 });
     const slog  = await slogs.find(m => m.content.includes(message.author.id));
     if(slog) settingsbefore = slog.content.split('\n');
     const settings = Array.from(settingsbefore); settings[0] = logheader;
     /*
-    const klogch = client.channels.get(pata.keeplog);
+    const klogch = client.channels.cache.get(pata.keeplog);
     let keepsbefore = [logheader];
-    const klogs = await klogch.fetchMessages({ limit:100 });
+    const klogs = await klogch.messages.fetch({ limit:100 });
     const klog  = await klogs.find(m => m.content.includes(message.author.id));
     if(klog) keepsbefore = klog.content.split('\n');
     const keeps = Array.from(keepsbefore); keeps[0] = logheader;
@@ -2072,7 +2072,7 @@ async function pentashop({client, data, pata, tools, message, command, plog, plo
     let si = '';
     if(command[1].match(/^\d+$/)) si = shoplist.find((item,index)=>index+1==Number(command[1]));
     else si = shoplist.find(item=>item.id==command[1]||item.name==command[1]||item.title==command[1]);
-    if(!si){PentaResult(message.channel, '', shopname, message.author.avatarURL, 'コマンドに誤りがあるか、本日取り扱っておりません。', '', color, '', pata.pentaname);return;};
+    if(!si){PentaResult(message.channel, '', shopname, message.author.displayAvatarURL(), 'コマンドに誤りがあるか、本日取り扱っておりません。', '', color, '', pata.pentaname);return;};
     
     //■■■不足メッセージ
     if(((si.itemToLose=='coin')     ? Number(logpoints[2])
@@ -2084,7 +2084,7 @@ async function pentashop({client, data, pata, tools, message, command, plog, plo
        :(si.itemToLose=='ribbon')   ? (logitems[7]&&Number(logitems[7]))
        :(si.itemToLose=='eventitem')? Number(logeventitems[si.itemToLoseIndex])
        :undefined) < si.numToLose){
-      PentaResult(message.channel, '', shopname, message.author.avatarURL, ((si.itemToLose=='coin')?'コイン':'アイテム')+'が不足しています。', '', color, '', pata.pentaname);
+      PentaResult(message.channel, '', shopname, message.author.displayAvatarURL(), ((si.itemToLose=='coin')?'コイン':'アイテム')+'が不足しています。', '', color, '', pata.pentaname);
       return; };
     
     //■■■■■■■■■■■■■■■■■■■■　獲得　■■■■■■■■■■■■■■■■■■■■
@@ -2094,7 +2094,7 @@ async function pentashop({client, data, pata, tools, message, command, plog, plo
     else if(si.itemToGet=='jewel')     { logitems[2] = Number(logitems[2]) + si.numToGet; }
     else if(si.itemToGet=='invite')    { logitems[4] = Number(logitems[4]) + si.numToGet; }
     else if(si.itemToGet=='ribbon')    { logitems[7] = Number(logitems[7]) + si.numToGet; }
-    else if(si.itemToGet=='theme')     { if(logthemeslist.find(tm=>tm==si.id)){PentaResult(message.channel, '', shopname, message.author.avatarURL, si.name+' は既に持っています。', '', color, '', pata.pentaname);
+    else if(si.itemToGet=='theme')     { if(logthemeslist.find(tm=>tm==si.id)){PentaResult(message.channel, '', shopname, message.author.displayAvatarURL(), si.name+' は既に持っています。', '', color, '', pata.pentaname);
                                                                                return;};
                                          logthemeslist.push(si.id); }
     else if(si.itemToGet=='eventitem') { logeventitems[si.itemToGetIndex] = Number(logeventitems[si.itemToGetIndex]) + si.numToGet; }
@@ -2125,7 +2125,7 @@ async function pentashop({client, data, pata, tools, message, command, plog, plo
       let srfline;
       if(level==0||april){
         const serifulog = (april&&!chr.eventid) ? pata.aprilserifulog : pata.serifulog;
-        const smsgs = await client.channels.get(serifulog).fetchMessages({ limit:100 });
+        const smsgs = await client.channels.cache.get(serifulog).messages.fetch({ limit:100 });
         srfline = smsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name+'＠＠') );
       }
       const introduction = (srfline) ? '\n```「' + srfline.split('＠＠')[1] + '」```' : '';
@@ -2147,7 +2147,7 @@ async function pentashop({client, data, pata, tools, message, command, plog, plo
 
       let ti = 0;
       do{
-        const tmsgs = await client.channels.get(tchids[ti]).fetchMessages({ limit:100 });
+        const tmsgs = await client.channels.cache.get(tchids[ti]).messages.fetch({ limit:100 });
         const tmsg = await (tchids[ti]==pata.sptnlog||tchids[ti]==pata.maxtnlog||tchids[ti]==pata.extratnlog||(tchids[ti]==data.DataSet.april['Thumbnail']&&chr.eventid&&chr.eventid.match(/PSEUDO|SECRET/))) //完全一致の条件
                      ? tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.split('：')[0]==chr.name)
                      : tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name.split('(')[0]));
@@ -2160,14 +2160,14 @@ async function pentashop({client, data, pata, tools, message, command, plog, plo
       //■■ 発言作成：メッセージ送信
       const gettext = (level<5) ? 'GET! '+pata.raritytext(chr) : '交換 失敗' ;
       const ccolor = (level==7) ? pata.colorx : (chr.eventid) ? pata.eventlist.find(e=>e.id == chr.eventid).color : pata.colorr[chr.rarity]; ;
-      await PentaResult(message.channel, '', gettext, message.author.avatarURL, tools.emj(chr)+chr.name+count, description, ccolor, '', '', thumbnailurl);
+      await PentaResult(message.channel, '', gettext, message.author.displayAvatarURL(), tools.emj(chr)+chr.name+count, description, ccolor, '', '', thumbnailurl);
 
       //■■■■■■■■■■非超過ゆえ処理■■■■■■■■■■
       if(level<5) ploga[8] = plogc.map(c => c.join('')).join('');
       else return;
     }
     else if(si.itemToGet=='episode')   { if(!settings[5]) settings[5] = 'My効果/df/df';
-                                         if(settings[5].split('/')[2].includes(si.id)){PentaResult(message.channel, '', shopname, message.author.avatarURL, 'この話 '+si.name+' はもう知っていた。', '', color, '', pata.pentaname);
+                                         if(settings[5].split('/')[2].includes(si.id)){PentaResult(message.channel, '', shopname, message.author.displayAvatarURL(), 'この話 '+si.name+' はもう知っていた。', '', color, '', pata.pentaname);
                                                                                        return;}
                                          else settings[5]+=' '+si.id;
                                        };
@@ -2223,7 +2223,7 @@ async function pentashop({client, data, pata, tools, message, command, plog, plo
                         );
     
     
-    PentaResult(message.channel, '', shopname, message.author.avatarURL, title, description, color, '', pata.pentaname);    
+    PentaResult(message.channel, '', shopname, message.author.displayAvatarURL(), title, description, color, '', pata.pentaname);    
   };
   
   console.log('▲▲▲'+message.author.username);
@@ -2234,14 +2234,14 @@ async function pentashop({client, data, pata, tools, message, command, plog, plo
 //■■■■■■■■■■■■■■■■■■■■　★ベスト・ワーストスコア表示　■■■■■■■■■■■■■■■■■■■■
 async function pentabestworst({client, pata, message, ftype:BorW}){
   console.log('■■■■■'+BorW.toUpperCase()+'スコア表示■■■■■');
-  const msgs = await client.channels.get(pata[BorW+'scorelog']).fetchMessages({ limit:100 });
+  const msgs = await client.channels.cache.get(pata[BorW+'scorelog']).messages.fetch({ limit:100 });
   const msg = msgs.find(m=>m.content.split('\n')[0] == message.author.id);
   if(msg) {
     const be = msg.embeds[0]; console.log(be);
     const imageurl = (be.image) ? be.image.url : '' ;
     PentaResult(message.channel, msg.content.split('\n')[1], be.author.name, be.author.iconURL, be.title, be.description, be.color, be.footer.iconURL, be.footer.text, '', be.fields, imageurl);
   }
-  else PentaResult(message.channel, '', '', '', BorW.toUpperCase()+' SCORE が見つかりません。', '', pata.color, message.author.avatarURL, pata.pentaname, '' );
+  else PentaResult(message.channel, '', '', '', BorW.toUpperCase()+' SCORE が見つかりません。', '', pata.color, message.author.displayAvatarURL(), pata.pentaname, '' );
   console.log('▲▲▲'+message.author.username);
   return;
 };
@@ -2258,7 +2258,7 @@ async function pentatheme({pata, tools, message, command, plog, ploga}){
     const description = '「！ぺて (番号 or テーマ名 or id)」等の入力でテーマを変更できます。';
     const themeslisttxts = logthemeslist.map((id,index)=>{ const num = (nowtheme.id == id) ? '▶️' : tools.nemj(index+1) ;
                                                          return num+' '+themeslist[index].name+' 🆔'+id; });
-    PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, '🖼️'+playername+' の所持テーマ一覧', description+'\n'+themeslisttxts.join('\n'), nowtheme.color);
+    PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), '🖼️'+playername+' の所持テーマ一覧', description+'\n'+themeslisttxts.join('\n'), nowtheme.color);
     return;
   }
   else{
@@ -2266,7 +2266,7 @@ async function pentatheme({pata, tools, message, command, plog, ploga}){
     if     (Number(command[1])<=themeslist.length)                   newtheme = themeslist[Number(command[1])-1];
     else if(themeslist.find(t=>t.id==command[1]))                    newtheme = themeslist.find(t=>t.id==command[1]);
     else if(themeslist.find(t=>tools.hiraganize(t.name)==command[1]))newtheme = themeslist.find(t=>tools.hiraganize(t.name)==command[1]);
-    else{PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, 'コマンドに誤りがあるか、該当テーマを所持していません。', '', nowtheme.color);return;};
+    else{PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), 'コマンドに誤りがあるか、該当テーマを所持していません。', '', nowtheme.color);return;};
     
     logthemes[0] = newtheme.id;
     ploga[7] = logthemes.join('/');
@@ -2277,7 +2277,7 @@ async function pentatheme({pata, tools, message, command, plog, ploga}){
     console.log('■ログ書込完了 : '+ploga.join('\n　'));
     sent.delete();
     
-    PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, '🖼️テーマを「'+newtheme.name+'」に設定しました。', '', newtheme.color);
+    PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), '🖼️テーマを「'+newtheme.name+'」に設定しました。', '', newtheme.color);
   
   console.log('▲▲▲'+message.author.username);
   
@@ -2289,8 +2289,8 @@ async function pentatheme({pata, tools, message, command, plog, ploga}){
 async function pentamyfx({client, pata, tools, message, command, plog, ploga}){
   console.log('■■■■■My効果設定■■■■■');
   const playername    = (message.member) ? message.member.displayName : message.author.username ;
-  const slogch = client.channels.get(pata.settingslog);
-  const slogs = await slogch.fetchMessages({ limit:100 });
+  const slogch = client.channels.cache.get(pata.settingslog);
+  const slogs = await slogch.messages.fetch({ limit:100 });
   const slog  = await slogs.find(m => m.content.includes(message.author.id));
   const settings = slog.content.split('\n');
   if(!settings[5]) settings[5] = 'My効果/df/df';
@@ -2303,7 +2303,7 @@ async function pentamyfx({client, pata, tools, message, command, plog, ploga}){
     const description = 'My効果📜は1つだけ設定できる追加エピソード効果です。\n「！ぺま (番号 or 効果名 or id)」等の入力でMy効果を変更できます。';
     const myfxslisttxts = logmyfxslist.map((id,index)=>{ const num = (nowmyfx.myfxid == id) ? '▶️' : tools.nemj(index+1) ;
                                                          return num+' '+myfxslist[index].f().title+' 🆔'+id+((id=='df')?'':'\n'+myfxslist[index].f().description); });
-    PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, '📖'+playername+' の所持My効果📜一覧', description+'\n──────────────────\n'+myfxslisttxts.join('\n\n'), pata.color);
+    PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), '📖'+playername+' の所持My効果📜一覧', description+'\n──────────────────\n'+myfxslisttxts.join('\n\n'), pata.color);
     return;
   }
   else{
@@ -2311,7 +2311,7 @@ async function pentamyfx({client, pata, tools, message, command, plog, ploga}){
     if     (Number(command[1])<=myfxslist.length)                        newmyfx = myfxslist[Number(command[1])-1];
     else if(myfxslist.find(t=>t.myfxid==command[1]))                     newmyfx = myfxslist.find(t=>t.myfxid==command[1]);
     else if(myfxslist.find(t=>tools.hiraganize(t.f().title)==command[1]))newmyfx = myfxslist.find(t=>tools.hiraganize(t.f().title)==command[1]);
-    else{PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, 'コマンドに誤りがあるか、該当テーマを所持していません。', '', pata.color);return;};
+    else{PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), 'コマンドに誤りがあるか、該当テーマを所持していません。', '', pata.color);return;};
     
     logmyfxs[1] = newmyfx.myfxid;
     settings[5] = logmyfxs.join('/');
@@ -2322,7 +2322,7 @@ async function pentamyfx({client, pata, tools, message, command, plog, ploga}){
     console.log('■ログ書込完了 : '+settings.join('\n　'));
     sent.delete();
     
-    PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, 'My効果を「'+newmyfx.f().title+'」に設定しました。', '', pata.color);
+    PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), 'My効果を「'+newmyfx.f().title+'」に設定しました。', '', pata.color);
   
   console.log('▲▲▲'+message.author.username);
   
@@ -2340,8 +2340,8 @@ async function pentafavorite({client, data, pata, tools, message, command, plog,
     else if(command[1].match(/すてーたす|ステータス/)){command.splice(1,1); mode = 'ステータス';};
     const index    = (mode=='お気に入り') ? 1
                    : (mode=='ログイン')   ? 2 : 3 ;
-    const flogch   = client.channels.get(pata.favoritelog);
-    const flogs    = await flogch.fetchMessages({ limit:100 });
+    const flogch   = client.channels.cache.get(pata.favoritelog);
+    const flogs    = await flogch.messages.fetch({ limit:100 });
     const flog     = await flogs.find(fv => fv.content.includes(message.author.id));
     const favorite = (flog) ? flog.content.split('\n') : ['■■■■■' + message.author.id + ' ' + message.author.username, 'none', 'favorite', 'favorite', 'テーマ/df/df', 'My効果/df/df'];
     let title = '';
@@ -2374,9 +2374,9 @@ async function pentafavorite({client, data, pata, tools, message, command, plog,
       if(command[1].match(regname)) command[1] = command[1].replace(regname, '');
       const chr = tools.getCharacter(allcards, command[1]);
 
-      if(!chr||chr == 'multiple'){ PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, '', command[1]+' は所持カードにないか、複数のキャラに使用されています。表記を変更してお試しください。', tm.color); return;};
+      if(!chr||chr == 'multiple'){ PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), '', command[1]+' は所持カードにないか、複数のキャラに使用されています。表記を変更してお試しください。', tm.color); return;};
       
-      if(chr.eventid=='PSEUDO'&&!chr.id.match(/^くらまえ/))  PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, tools.emj(chr)+chr.name+' [Lv.'+chr.collected+']', '該当のカードはお気に入りの対象ではありません。', (chr.eventid)?pata.eventlist.find(e=>e.id == chr.eventid).color:pata.colorr[chr.rarity], '', '', thumbnailurl);
+      if(chr.eventid=='PSEUDO'&&!chr.id.match(/^くらまえ/))  PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), tools.emj(chr)+chr.name+' [Lv.'+chr.collected+']', '該当のカードはお気に入りの対象ではありません。', (chr.eventid)?pata.eventlist.find(e=>e.id == chr.eventid).color:pata.colorr[chr.rarity], '', '', thumbnailurl);
       //■■■■■サムネイルURL取得
       const ds = data.DataSet[chr.genre];
       const april = (tools.getDateText().match(/\/4\/1$/));
@@ -2387,7 +2387,7 @@ async function pentafavorite({client, data, pata, tools, message, command, plog,
 
       let ti = 0;
       do{
-        const tmsgs = await client.channels.get(tchids[ti]).fetchMessages({ limit:100 });
+        const tmsgs = await client.channels.cache.get(tchids[ti]).messages.fetch({ limit:100 });
         const tmsg = await (tchids[ti]==pata.sptnlog||tchids[ti]==pata.maxtnlog||tchids[ti]==pata.extratnlog||(tchids[ti]==data.DataSet.april['Thumbnail']&&chr.eventid&&chr.eventid.match(/PSEUDO|SECRET/))) //完全一致の条件
                      ? tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.split('：')[0]==chr.name)
                      : tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name.split('(')[0]));
@@ -2407,9 +2407,9 @@ async function pentafavorite({client, data, pata, tools, message, command, plog,
     console.log('■ログ書込完了 : '+favorite.join('\n　'));
     sent.delete();
 
-    PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, title, description, tm.color, '', '', thumbnailurl);
+    PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), title, description, tm.color, '', '', thumbnailurl);
   }
-  else PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, 'カードを指定してください。', '', tm.color);
+  else PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), 'カードを指定してください。', '', tm.color);
   
   console.log('▲▲▲'+message.author.username);
   
@@ -2425,7 +2425,7 @@ async function pentalvextra({client, data, pata, tools, message, commandorig:com
   const tm = pata.themes.find(t=>t.id==ploga[7].split('/')[0]);
   const eventmode=(event&&event.extraindex!==undefined&&logeventitems[event.extraindex]>0)?true:false;
   if(Number(logitems[2])==0&&(!eventmode||(eventmode&&logeventitems[event.extraindex]==0)))
-    { PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, '宝珠💍がありません。', '', tm.color);return; };
+    { PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), '宝珠💍がありません。', '', tm.color);return; };
     
   if(command[1]){
     const orcards = data.characters.filter(c => c.genre=='stTm'||c.genre=='tcTm'||c.genre=='otTm');
@@ -2438,9 +2438,9 @@ async function pentalvextra({client, data, pata, tools, message, commandorig:com
     if(command[1].match(regname)) command[1] = command[1].replace(regname, '');
     const chr = tools.getCharacter(allcards, command[1]);
     
-    if     (!chr||chr == 'multiple') PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, '', command[1]+' は所持カードにないか、複数のキャラに使用されています。表記を変更してお試しください。', tm.color);
+    if     (!chr||chr == 'multiple') PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), '', command[1]+' は所持カードにないか、複数のキャラに使用されています。表記を変更してお試しください。', tm.color);
     else{
-      if(chr.eventid=='PSEUDO'&&!chr.id.match(/^くらまえ/))  PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, tools.emj(chr)+chr.name+' [Lv.'+chr.collected+']', '該当のカードはLv.EXTRAの対象ではありません。', (chr.eventid)?pata.eventlist.find(e=>e.id == chr.eventid).color:pata.colorr[chr.rarity], '', '', thumbnailurl);
+      if(chr.eventid=='PSEUDO'&&!chr.id.match(/^くらまえ/))  PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), tools.emj(chr)+chr.name+' [Lv.'+chr.collected+']', '該当のカードはLv.EXTRAの対象ではありません。', (chr.eventid)?pata.eventlist.find(e=>e.id == chr.eventid).color:pata.colorr[chr.rarity], '', '', thumbnailurl);
       //■■■■■サムネイルURL取得
       const ds = data.DataSet[chr.genre];
       const today = new Date();
@@ -2453,7 +2453,7 @@ async function pentalvextra({client, data, pata, tools, message, commandorig:com
 
       let ti = 0;
       do{
-        const tmsgs = await client.channels.get(tchids[ti]).fetchMessages({ limit:100 });
+        const tmsgs = await client.channels.cache.get(tchids[ti]).messages.fetch({ limit:100 });
         const tmsg = await (tchids[ti]==pata.sptnlog||tchids[ti]==pata.maxtnlog||tchids[ti]==pata.extratnlog||(tchids[ti]==data.DataSet.april['Thumbnail']&&chr.eventid&&chr.eventid.match(/PSEUDO|SECRET/))) //完全一致の条件
                      ? tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.split('：')[0]==chr.name)
                      : tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name.split('(')[0]));
@@ -2463,8 +2463,8 @@ async function pentalvextra({client, data, pata, tools, message, commandorig:com
   
       if(!thumbnailurl) thumbnailurl = data.noimage;
       
-      if     (chr.collected<5)  PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, tools.emj(chr)+chr.name+' [Lv.'+chr.collected+']', '該当のカードはLv.MAXに達していません。', (chr.eventid)?pata.eventlist.find(e=>e.id == chr.eventid).color:pata.colorr[chr.rarity], '', '', thumbnailurl);
-      else if(chr.collected==7) PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, tools.emj(chr)+chr.name+' [Lv.EXTRA💍]', '該当のカードは既にLv.EXTRAです。', pata.raritycolor(chr), '', '', thumbnailurl);
+      if     (chr.collected<5)  PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), tools.emj(chr)+chr.name+' [Lv.'+chr.collected+']', '該当のカードはLv.MAXに達していません。', (chr.eventid)?pata.eventlist.find(e=>e.id == chr.eventid).color:pata.colorr[chr.rarity], '', '', thumbnailurl);
+      else if(chr.collected==7) PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), tools.emj(chr)+chr.name+' [Lv.EXTRA💍]', '該当のカードは既にLv.EXTRAです。', pata.raritycolor(chr), '', '', thumbnailurl);
       else{
         //■■ログ作成
         if(!eventmode) logitems[2] = Number(logitems[2])-1;
@@ -2492,12 +2492,12 @@ async function pentalvextra({client, data, pata, tools, message, commandorig:com
         console.log('■■■メッセージ作成結果■■■ : \n'+[Rtitle, Rdescription].join('\n'));
 
         //■■■■■■■■■■メッセージ送信■■■■■■■■■■
-        await PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, Rtitle, Rdescription, pata.colorx, '', '', thumbnailurl);
+        await PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), Rtitle, Rdescription, pata.colorx, '', '', thumbnailurl);
         console.log('■■■メッセージ投稿完了■■■');
       };
     };
   }
-  else PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, 'カードを指定してください。', '', tm.color);
+  else PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), 'カードを指定してください。', '', tm.color);
   
   console.log('▲▲▲'+message.author.username);
   
@@ -2508,7 +2508,7 @@ async function pentalvextra({client, data, pata, tools, message, commandorig:com
 async function pentainvite({client, data, pata, tools, message, commandorig:command, plog, ploga, event}){
   console.log('■■■■■指名招待■■■■■');
   
-  if(!command[1]||command.length!==2){PentaResult(message.channel, '', '', '', '', 'コマンドが不正です。表記を変更してお試しください。', pata.color, message.author.avatarURL, pata.pentaname); return;};
+  if(!command[1]||command.length!==2){PentaResult(message.channel, '', '', '', '', 'コマンドが不正です。表記を変更してお試しください。', pata.color, message.author.displayAvatarURL(), pata.pentaname); return;};
   
   //■■■■■■■■■■準備■■■■■■■■■■
   const today = tools.getDateText();
@@ -2521,7 +2521,7 @@ async function pentainvite({client, data, pata, tools, message, commandorig:comm
   
   const eventmode=(event&&event.inviteindex!==undefined&&logeventitems[event.inviteindex]>0)?true:false;
   if(Number(logitems[4])==0&&(!eventmode||(eventmode&&logeventitems[event.inviteindex]==0)))
-    { PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, '指名招待券🎟️がありません。', '', pata.color);return; };
+    { PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), '指名招待券🎟️がありません。', '', pata.color);return; };
   
   //■■■■■■■■■■指名■■■■■■■■■■
   const orcards = await data.characters.filter(c => (c.genre == 'stTm'||c.genre == 'tcTm'||c.genre=='otTm')&&!pata.giftids.includes(c.id));
@@ -2541,7 +2541,7 @@ async function pentainvite({client, data, pata, tools, message, commandorig:comm
   if(command[1].match(regname)) command[1] = command[1].replace(regname, '');
   const chr = await tools.getCharacter(characters, command[1]);
   if(!chr||chr == 'multiple'){
-    PentaResult(message.channel, '', '', '', '', command[1]+'はデータにないか、複数のキャラに使用されている、または対象カードではありません。表記を変更してお試しください。', pata.color, message.author.avatarURL, pata.pentaname);
+    PentaResult(message.channel, '', '', '', '', command[1]+'はデータにないか、複数のキャラに使用されている、または対象カードではありません。表記を変更してお試しください。', pata.color, message.author.displayAvatarURL(), pata.pentaname);
     return;
   }
   console.log('■■■指名対象■■■ : '+chr.name);
@@ -2563,7 +2563,7 @@ async function pentainvite({client, data, pata, tools, message, commandorig:comm
   let srfline;
   if(level==0||april){
     const serifulog = (april&&!chr.eventid) ? pata.aprilserifulog : pata.serifulog;
-    const smsgs = await client.channels.get(serifulog).fetchMessages({ limit:100 });
+    const smsgs = await client.channels.cache.get(serifulog).messages.fetch({ limit:100 });
     srfline = smsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name+'＠＠') );
   }
   const introduction = (srfline) ? '\n```「' + srfline.split('＠＠')[1] + '」```' : '';
@@ -2585,7 +2585,7 @@ async function pentainvite({client, data, pata, tools, message, commandorig:comm
 
   let ti = 0;
   do{
-        const tmsgs = await client.channels.get(tchids[ti]).fetchMessages({ limit:100 });
+        const tmsgs = await client.channels.cache.get(tchids[ti]).messages.fetch({ limit:100 });
         const tmsg = await (tchids[ti]==pata.sptnlog||tchids[ti]==pata.maxtnlog||tchids[ti]==pata.extratnlog||(tchids[ti]==data.DataSet.april['Thumbnail']&&chr.eventid&&chr.eventid.match(/PSEUDO|SECRET/))) //完全一致の条件
                      ? tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.split('：')[0]==chr.name)
                      : tmsgs.map(message => message.content).join('\n').split('\n').find(line => line.includes(chr.name.split('(')[0]));
@@ -2598,7 +2598,7 @@ async function pentainvite({client, data, pata, tools, message, commandorig:comm
   //■■ 発言作成：メッセージ送信
   const gettext = (level<5) ? 'GET! '+pata.raritytext(chr) : '指名招待 失敗' ;
   const color = (level==7) ? pata.colorx : (chr.eventid) ? pata.eventlist.find(e=>e.id == chr.eventid).color : pata.colorr[chr.rarity]; ;
-  await PentaResult(message.channel, '', gettext, message.author.avatarURL, tools.emj(chr)+chr.name+count, description, color, '', '', thumbnailurl);
+  await PentaResult(message.channel, '', gettext, message.author.displayAvatarURL(), tools.emj(chr)+chr.name+count, description, color, '', '', thumbnailurl);
   
   //■■■■■■■■■■非超過ゆえ処理■■■■■■■■■■
   if(level<5){
@@ -2657,7 +2657,7 @@ async function pentainvite({client, data, pata, tools, message, commandorig:comm
     console.log('■■■メッセージ作成結果■■■ : \n'+[Rtitle, Rdescription].join('\n'));
 
     //■■■■■■■■■■メッセージ送信■■■■■■■■■■
-    await PentaResult(message.channel, '', '', '', Rtitle, Rdescription, pata.color, message.author.avatarURL, pata.pentaname);
+    await PentaResult(message.channel, '', '', '', Rtitle, Rdescription, pata.color, message.author.displayAvatarURL(), pata.pentaname);
     console.log('■■■メッセージ投稿完了■■■');
   };
   
@@ -2669,7 +2669,7 @@ async function pentainvite({client, data, pata, tools, message, commandorig:comm
 //■■■■■■■■■■■■■■■■■■■■　★更新情報　■■■■■■■■■■■■■■■■■■■■
 async function pentanews(client, pata, message, command){
   console.log('■■■■■更新情報■■■■■');
-  const newsmessages = await client.channels.get(pata.newslog).fetchMessages({ limit:100 });
+  const newsmessages = await client.channels.cache.get(pata.newslog).messages.fetch({ limit:100 });
   const num = (command[1]&&command[1].match(/^\d+$/)) ? Number(command[1]) : 10;
   PentaResult(message.channel, '', '', '', '🆕 最近の更新情報'+num+'件 🆕', newsmessages.first(num).map(m=>m.content).join('\n'), pata.color, '', pata.pentaname);
   console.log('▲▲▲'+message.author.username);
@@ -2863,9 +2863,9 @@ async function pentahaifu({data, pata, message, command, plogs}){
     });
     console.log('■■■配布完了');
     
-    PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, name+' '+value+' を配布しました！', '全プレイヤーログを書き換えました。', pata.color);
+    PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), name+' '+value+' を配布しました！', '全プレイヤーログを書き換えました。', pata.color);
   }
-  else PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, '', 'コマンドに誤りがあるか、管理者による入力が行われていません。', pata.color);;
+  else PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), '', 'コマンドに誤りがあるか、管理者による入力が行われていません。', pata.color);;
   
   return;
 };
@@ -2880,9 +2880,9 @@ async function pentakakikae({data, pata, message, command, plogs}){
     plogs.forEach(plog=>plog.edit(plog.content.replace(new RegExp(before,'g'), after)));
     console.log('■■■書換完了');
     
-    PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, before+' → '+after, '全プレイヤーログを書き換えました。', pata.color);
+    PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), before+' → '+after, '全プレイヤーログを書き換えました。', pata.color);
   }
-  else PentaResult(message.channel, '', pata.pentaname, message.author.avatarURL, '', 'コマンドに誤りがあるか、管理者による入力が行われていません。', pata.color);;
+  else PentaResult(message.channel, '', pata.pentaname, message.author.displayAvatarURL(), '', 'コマンドに誤りがあるか、管理者による入力が行われていません。', pata.color);;
   
   return;
 };
@@ -2913,12 +2913,12 @@ async function pentaevent({client, data, pata, tools, message, commandorig:comma
     else if(event&&command.length>=2&&event.specialprocess){
       atitle = 'イベント特殊操作';
       color = event.color;
-      const slogs  = await client.channels.get(pata.speciallog).fetchMessages({ limit:100 });
+      const slogs  = await client.channels.cache.get(pata.speciallog).messages.fetch({ limit:100 });
       const slog   = await slogs.find(m => m.content.includes(message.author.id+' '+event.id));
       const rlog   = await slogs.find(m => m.content.includes('RAID '+event.id));
       let quizlist = undefined;
       if(event.id=='QUIZ'){
-        const qlogs = await client.channels.get(pata.quizlog).fetchMessages({ limit:100 });
+        const qlogs = await client.channels.cache.get(pata.quizlog).messages.fetch({ limit:100 });
         quizlist = qlogs.map(m=>m.content).join('\n').split('\n').map(m=>m.split('＠＠'));
       };
       const o = await event.specialprocess({client:client, message:message, data:data, pata:pata,
@@ -2979,8 +2979,8 @@ async function pentaevent({client, data, pata, tools, message, commandorig:comma
   };
   
   await PentaResult(message.channel, '', atitle, '', title, description, color, '', pata.pentaname);
-  if(raidMessageObj) await message.channel.send('',raidMessageObj);
-  if(raidMessageObj) await client.channels.get(pata.magicapentach).send('',raidMessageObj); //PENTAチャンネルです
+  if(raidMessageObj) await message.channel.send(raidMessageObj);
+  if(raidMessageObj) await client.channels.cache.get(pata.magicapentach).send(raidMessageObj); //PENTAチャンネルです
   
   console.log('▲▲▲'+message.author.username);
   
@@ -3005,8 +3005,8 @@ async function pentaabout({client, data, pata, message, command}){
   }
   else{
     //ゲーム
-    const plogch = client.channels.get(pata.playerlog);
-    const plogs  = await plogch.fetchMessages({ limit:100 });
+    const plogch = client.channels.cache.get(pata.playerlog);
+    const plogs  = await plogch.messages.fetch({ limit:100 });
     const newDate = new Date(); newDate.setHours(newDate.getHours() + 9);
     const y = newDate.getFullYear();
     const m = ('0'+(newDate.getMonth()+1)).slice(-2);
@@ -3019,20 +3019,20 @@ async function pentaabout({client, data, pata, message, command}){
 
     const nums = {'0️⃣':'0','1️⃣':'1','2️⃣':'2','3️⃣':'3','4️⃣':'4','5️⃣':'5','6️⃣':'6','7️⃣':'7','8️⃣':'8','9️⃣':'9','⛔':'-'}; 
     const nemj = {'0':'0️⃣','1':'1️⃣','2':'2️⃣','3':'3️⃣','4':'4️⃣','5':'5️⃣','6':'6️⃣','7':'7️⃣','8':'8️⃣','9':'9️⃣','-':'⛔'};
-    const bestlogch = client.channels.get(pata.bestscorelog);
-    const bestlogs  = await bestlogch.fetchMessages({ limit:100 });
+    const bestlogch = client.channels.cache.get(pata.bestscorelog);
+    const bestlogs  = await bestlogch.messages.fetch({ limit:100 });
     const bestscores = bestlogs.map(m=>Number(m.embeds[0].title.match(/(0️⃣|1️⃣|2️⃣|3️⃣|4️⃣|5️⃣|6️⃣|7️⃣|8️⃣|9️⃣|⛔)+/)[0].match(/0️⃣|1️⃣|2️⃣|3️⃣|4️⃣|5️⃣|6️⃣|7️⃣|8️⃣|9️⃣|⛔/g)
                                               .map(n=>nums[n]).join('')));
     const bestscore = Math.max(...bestscores);
     const bestlog = bestlogs.find(m=>m.embeds[0].title.includes(String(bestscore).split('').map(n=>nemj[n]).join('')));
-    const bestuser = client.users.get(bestlog.content.split('\n')[0]);
-    const worstlogch = client.channels.get(pata.worstscorelog);
-    const worstlogs  = await worstlogch.fetchMessages({ limit:100 });
+    const bestuser = await client.users.fetch(bestlog.content.split("\n")[0]).catch(()=>({username:"???"}));
+    const worstlogch = client.channels.cache.get(pata.worstscorelog);
+    const worstlogs  = await worstlogch.messages.fetch({ limit:100 });
     const worstscores = worstlogs.map(m=>Number(m.embeds[0].title.match(/(0️⃣|1️⃣|2️⃣|3️⃣|4️⃣|5️⃣|6️⃣|7️⃣|8️⃣|9️⃣|⛔)+/)[0].match(/0️⃣|1️⃣|2️⃣|3️⃣|4️⃣|5️⃣|6️⃣|7️⃣|8️⃣|9️⃣|⛔/g)
                                               .map(n=>nums[n]).join('')));
     const worstscore = Math.min(...worstscores);
     const worstlog = worstlogs.find(m=>m.embeds[0].title.includes(String(worstscore).split('').map(n=>nemj[n]).join('')));
-    const worstuser = client.users.get(worstlog.content.split('\n')[0]);
+    const worstuser = await client.users.fetch(worstlog.content.split("\n")[0]).catch(()=>({username:"???"}));
 
     //カード
     const orcards = await data.characters.filter(c => (c.genre == 'stTm'||c.genre == 'tcTm'||c.genre=='otTm')&&!pata.giftids.includes(c.id));
@@ -3045,47 +3045,47 @@ async function pentaabout({client, data, pata, message, command}){
     //効果類
     const episodes = await pata.episodes.filter(ep=>!ep.forevent);
     //登録類
-    const serifulogch = client.channels.get(pata.serifulog);
-    const serifulogs  = await serifulogch.fetchMessages({ limit:100 });
+    const serifulogch = client.channels.cache.get(pata.serifulog);
+    const serifulogs  = await serifulogch.messages.fetch({ limit:100 });
     const serifulines = serifulogs.map(m=>m.content).join('\n').split('\n');
     const serifulinesN = serifulines.filter(l=>!l.split('＠＠')[0].includes('('));
     const serifulinesS = serifulines.filter(l=>l.split('＠＠')[0].includes('('));
 
-    const loginlogch = client.channels.get(pata.fserifulogL);
-    const loginlogs  = await loginlogch.fetchMessages({ limit:100 });
+    const loginlogch = client.channels.cache.get(pata.fserifulogL);
+    const loginlogs  = await loginlogch.messages.fetch({ limit:100 });
     const loginlines = loginlogs.map(m=>m.content).join('\n').split('\n');
     const logincards = [...new Set(loginlines.map(l=>l.split('＠＠')[0]))];
-    const sploginlogch = client.channels.get(pata.fspserifulogL);
-    const sploginlogs  = await sploginlogch.fetchMessages({ limit:100 });
+    const sploginlogch = client.channels.cache.get(pata.fspserifulogL);
+    const sploginlogs  = await sploginlogch.messages.fetch({ limit:100 });
     const sploginlines = sploginlogs.map(m=>m.content).join('\n').split('\n');
     const splogincards = [...new Set(sploginlines.map(l=>l.split('＠＠')[0]))];
 
-    const statuslogch = client.channels.get(pata.fserifulogS);
-    const statuslogs  = await statuslogch.fetchMessages({ limit:100 });
+    const statuslogch = client.channels.cache.get(pata.fserifulogS);
+    const statuslogs  = await statuslogch.messages.fetch({ limit:100 });
     const statuslines = statuslogs.map(m=>m.content).join('\n').split('\n');
     const statuscards = [...new Set(statuslines.map(l=>l.split('＠＠')[0]))];
-    const spstatuslogch = client.channels.get(pata.fspserifulogS);
-    const spstatuslogs  = await spstatuslogch.fetchMessages({ limit:100 });
+    const spstatuslogch = client.channels.cache.get(pata.fspserifulogS);
+    const spstatuslogs  = await spstatuslogch.messages.fetch({ limit:100 });
     const spstatuslines = spstatuslogs.map(m=>m.content).join('\n').split('\n');
     const spstatuscards = [...new Set(spstatuslines.map(l=>l.split('＠＠')[0]))];
 
-    const eshoplogch = client.channels.get(pata.eshopserifulog);
-    const eshoplogs  = await eshoplogch.fetchMessages({ limit:100 });
+    const eshoplogch = client.channels.cache.get(pata.eshopserifulog);
+    const eshoplogs  = await eshoplogch.messages.fetch({ limit:100 });
     const eshoplines = eshoplogs.map(m=>m.content).join('\n').split('\n');
     const eshopcards = [...new Set(eshoplines.map(l=>l.split('＠＠')[0]))];
 
-    const shoplogch = client.channels.get(pata.shopserifulog);
-    const shoplogs  = await shoplogch.fetchMessages({ limit:100 });
+    const shoplogch = client.channels.cache.get(pata.shopserifulog);
+    const shoplogs  = await shoplogch.messages.fetch({ limit:100 });
     const shoplines = shoplogs.map(m=>m.content).join('\n').split('\n');
     const shopcards = [...new Set(shoplines.map(l=>l.split('＠＠')[0]))];
 
-    const otherlogch = client.channels.get(pata.otherserifulog);
-    const otherlogs  = await otherlogch.fetchMessages({ limit:100 });
+    const otherlogch = client.channels.cache.get(pata.otherserifulog);
+    const otherlogs  = await otherlogch.messages.fetch({ limit:100 });
     const otherlines = otherlogs.map(m=>m.content).join('\n').split('\n');
     const othercards = [...new Set(otherlines.map(l=>l.split('＠＠')[0]))];
 
-    const quizlogch = client.channels.get(pata.quizlog);
-    const quizlogs  = await quizlogch.fetchMessages({ limit:100 });
+    const quizlogch = client.channels.cache.get(pata.quizlog);
+    const quizlogs  = await quizlogch.messages.fetch({ limit:100 });
     const quizlines = quizlogs.map(m=>m.content).join('\n').split('\n');
     
     title = '全体';
@@ -3154,8 +3154,8 @@ exports.serifu = async function(client, message){ console.log('■penta.js セ�
   };
                                                  
   //■■発言取得
-  const logch = client.channels.get(pata.serifulog);
-  const msgs = await logch.fetchMessages({ limit:100 });
+  const logch = client.channels.cache.get(pata.serifulog);
+  const msgs = await logch.messages.fetch({ limit:100 });
   const msg = msgs.first();
   let  msgc = msg.content; console.log('msgc : '+msgc);
   const mid = message.author.id;
@@ -3229,8 +3229,8 @@ exports.aprilserifu = async function(client, message){ console.log('■penta.js 
   };
                                                  
   //■■発言取得
-  const logch = client.channels.get(pata.aprilserifulog);
-  const msgs = await logch.fetchMessages({ limit:100 });
+  const logch = client.channels.cache.get(pata.aprilserifulog);
+  const msgs = await logch.messages.fetch({ limit:100 });
   const msg = msgs.first();
   let  msgc = msg.content; console.log('msgc : '+msgc);
   const mid = message.author.id;
@@ -3308,26 +3308,26 @@ exports.fserifu = async function(client, message){ console.log('■penta.js お�
   let serifutype; let logch; let smsgs;
   if(message.content.match(/の(ろぐいん|ログイン)(せりふ|セリフ|台詞)(　|\s|\n)+/)){
     serifutype = 'ログイン';
-    if(sentsrf[0].match(/^投稿済/)){ const smsgs1 = await client.channels.get(pata.fserifulogL).fetchMessages({ limit:100 });
-                                    const smsgs2 = await client.channels.get(pata.fspserifulogL).fetchMessages({ limit:100 });
+    if(sentsrf[0].match(/^投稿済/)){ const smsgs1 = await client.channels.cache.get(pata.fserifulogL).messages.fetch({ limit:100 });
+                                    const smsgs2 = await client.channels.cache.get(pata.fspserifulogL).messages.fetch({ limit:100 });
                                           smsgs  = smsgs1.concat(smsgs2); }
-    else                          {       logch  = client.channels.get((chr.eventid) ? pata.fspserifulogL : pata.fserifulogL);
-                                          smsgs  = await logch.fetchMessages({ limit:100 }); };
+    else                          {       logch  = client.channels.cache.get((chr.eventid) ? pata.fspserifulogL : pata.fserifulogL);
+                                          smsgs  = await logch.messages.fetch({ limit:100 }); };
   }
   else if(message.content.match(/の(すてーたす|ステータス)(せりふ|セリフ|台詞)(　|\s|\n)+/)){
     serifutype = 'ステータス';
-    if(sentsrf[0].match(/^投稿済/)){ const smsgs1 = await client.channels.get(pata.fserifulogS).fetchMessages({ limit:100 });
-                                    const smsgs2 = await client.channels.get(pata.fspserifulogS).fetchMessages({ limit:100 });
+    if(sentsrf[0].match(/^投稿済/)){ const smsgs1 = await client.channels.cache.get(pata.fserifulogS).messages.fetch({ limit:100 });
+                                    const smsgs2 = await client.channels.cache.get(pata.fspserifulogS).messages.fetch({ limit:100 });
                                           smsgs  = smsgs1.concat(smsgs2); }
-    else                          {       logch  = client.channels.get((chr.eventid) ? pata.fspserifulogS : pata.fserifulogS);
-                                          smsgs  = await logch.fetchMessages({ limit:100 }); };
+    else                          {       logch  = client.channels.cache.get((chr.eventid) ? pata.fspserifulogS : pata.fserifulogS);
+                                          smsgs  = await logch.messages.fetch({ limit:100 }); };
   };
                                                   console.log(serifutype);
                                                   
   //■■セリフを確認
   if(newserifu.match(/^(確認|一覧)$/)){
     const mid = '＠＠'+message.author.id;
-    //const msgs = await logch.fetchMessages({ limit:100 }); //発言取得
+    //const msgs = await logch.messages.fetch({ limit:100 }); //発言取得
     const oldmsgs = (sentsrf[0].match(/^投稿済/)) ? smsgs.filter(message => message.content.includes(mid) )
                                                 : smsgs.filter(message => message.content.includes(mid) && message.content.includes(chr.name) );
     const alllines =  oldmsgs.map(message => message.content).reverse().join('\n').split('\n')
@@ -3348,7 +3348,7 @@ exports.fserifu = async function(client, message){ console.log('■penta.js お�
   
   //■■データセット分岐
   //const ds = (sentsrf[0].match(/^投稿済/)) ? '' : data.DataSet[chr.genre];
-  //const logch = (sentsrf[0].match(/^投稿済/)) ? '' : client.channels.get(ds['Himitsu']);
+  //const logch = (sentsrf[0].match(/^投稿済/)) ? '' : client.channels.cache.get(ds['Himitsu']);
   
   //■■削除
   if(newserifu.match(/^削除(\s|　|\n)/)){
@@ -3356,7 +3356,7 @@ exports.fserifu = async function(client, message){ console.log('■penta.js お�
     if(sentsrf[0].match(/^投稿済/)){message.channel.send('削除を行う場合は、個人の'+serifutype+'セリフ一覧💬を呼び出してください。'); return;};
     const listnum = tools.ANhalve(newserifu.slice(3));
     if(newserifu.length<4||!listnum.match(/\d+/)){message.channel.send(serifutype+'セリフ一覧💬のリスト番号が指定されていません。'); return;};
-    const sentmsgs = await message.channel.fetchMessages({limit:2});
+    const sentmsgs = await message.channel.messages.fetch({limit:2});
     const listmsg = sentmsgs.last();
     if(!listmsg.content.includes(mchr+'の'+serifutype+'セリフ一覧💬')){message.channel.send(mchr+'の'+serifutype+'セリフ一覧💬を直前に表示してください。'); return;};
     
@@ -3366,7 +3366,7 @@ exports.fserifu = async function(client, message){ console.log('■penta.js お�
     const srftext = listline.replace(/\d+\)\s/, '');
     const keytext = chr.name+'＠＠'+srftext+'＠＠'; console.log('keytext : '+keytext);
     //お気に入りセリフログチャンネルから本文を含む発言を探して削除する
-    //const smsgs = await logch.fetchMessages({ limit:100 });
+    //const smsgs = await logch.messages.fetch({ limit:100 });
     const smsg = smsgs.find(m => m.content.includes(keytext));
     const slines = smsg.content.split('\n').filter(l => !l.includes(keytext));
     const newsmsg = (slines.length == 0) ? 'deleted' : slines.join('\n');
@@ -3380,7 +3380,7 @@ exports.fserifu = async function(client, message){ console.log('■penta.js お�
   if(newserifu.length>100){message.channel.send(serifutype+'セリフ💬の内容は100文字以内でお願いします。(現在'+newserifu.length+'文字)'); return;}
   
   //■■入力へ
-  const msgs = await logch.fetchMessages({ limit:1 });
+  const msgs = await logch.messages.fetch({ limit:1 });
   const msg = msgs.first();
   const newsrf = chr.name + '＠＠' + newserifu + '＠＠' + message.author.id + '＠＠■';
   const newmsg = msg.content + '\n' + newsrf;
@@ -3411,8 +3411,8 @@ exports.maxthumbnail = async function(client, message, targetname){
   else if(chr == 'multiple'){message.channel.send(sentname[0]+'は複数のキャラに使用されています。表記を変更してお試しください。'); return;};
 
   //■■ログの取得
-  const logch = client.channels.get(targetlog);
-  const msgs = await logch.fetchMessages({ limit:100 });
+  const logch = client.channels.cache.get(targetlog);
+  const msgs = await logch.messages.fetch({ limit:100 });
   const msg = msgs.first();
   let msgc = msg.content;
   
@@ -3474,8 +3474,8 @@ exports.quiz = async function(client, message){ console.log('■penta.js クイ�
   };
                                                  
   //■■発言取得
-  const logch = client.channels.get(pata.quizlog);
-  const msgs = await logch.fetchMessages({ limit:100 });
+  const logch = client.channels.cache.get(pata.quizlog);
+  const msgs = await logch.messages.fetch({ limit:100 });
   const msg = msgs.first();
   let  msgc = msg.content; console.log('msgc : '+msgc);
   const mid = message.author.id;
@@ -3537,7 +3537,7 @@ async function pentatenp(client, data, pata, message, plog, ploga){
   ploga[3] = ploga[3] = logtickets.join(':');
   await plog.edit(ploga.join('\n'));
   console.log('■ログ書込完了 : '+ploga.join('\n　'));
-  PentaResult(message.channel, '', pata.pentaname+' 臨時プレゼント', message.author.avatarURL, '🎫×10 を獲得しました！', '残り 🎫×'+logtickets[0]+' 🧧×'+logtickets[1], pata.color, '', '', '' );
+  PentaResult(message.channel, '', pata.pentaname+' 臨時プレゼント', message.author.displayAvatarURL(), '🎫×10 を獲得しました！', '残り 🎫×'+logtickets[0]+' 🧧×'+logtickets[1], pata.color, '', '', '' );
   return;
 };
 async function pentathrp(client, data, pata, message, plog, ploga){
@@ -3547,14 +3547,14 @@ async function pentathrp(client, data, pata, message, plog, ploga){
   ploga[3] = ploga[3] = logtickets.join(':');
   await plog.edit(ploga.join('\n'));
   console.log('■ログ書込完了 : '+ploga.join('\n　'));
-  PentaResult(message.channel, '', pata.pentaname+' 臨時プレゼント', message.author.avatarURL, '🧧×3 を獲得しました！', '残り 🎫×'+logtickets[0]+' 🧧×'+logtickets[1], pata.color, '', '', '' );
+  PentaResult(message.channel, '', pata.pentaname+' 臨時プレゼント', message.author.displayAvatarURL(), '🧧×3 を獲得しました！', '残り 🎫×'+logtickets[0]+' 🧧×'+logtickets[1], pata.color, '', '', '' );
   return;
 };
 
 //■■■■■■■■■■■■■■■■■■■■　★便利ツールたち　■■■■■■■■■■■■■■■■■■■■
 //■■　■■　■■　■■　■■　embed送信機能　■■　■■　■■　■■　■■
 function PentaResult(channel, content, authorname, authoriconurl, title, description, color, footericonurl, footertext, thumbnailurl, fields, imageurl){
-  channel.send(content,{ embed: {
+  channel.send({content: content || undefined, embeds: [{
     author: {name:authorname,icon_url:(authoriconurl?authoriconurl:undefined)},
     title:title,
     description:description,
@@ -3564,7 +3564,7 @@ function PentaResult(channel, content, authorname, authoriconurl, title, descrip
     thumbnail: {url: (thumbnailurl?thumbnailurl:undefined)},
     image: {url: (imageurl?imageurl:undefined)},
     fields: fields
-  }});
+  }]});
   console.log('■■■メッセージ投稿■■■');
 };
 //■■　■■　■■　■■　■■　イベント取得機能　■■　■■　■■　■■　■■
