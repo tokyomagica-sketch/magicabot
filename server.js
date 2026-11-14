@@ -2,8 +2,16 @@ const http = require('http');
 //const html = require('fs').readFileSync('blocks.html');
 const querystring = require('querystring');
 const cron = require('node-cron');
-const discord = require('discord.js');
-const client = new discord.Client();
+const { Client, GatewayIntentBits, Partials, Events, ActivityType } = require('discord.js');
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,                 // サーバー・チャンネル・絵文字の情報
+    GatewayIntentBits.GuildMessages,          // サーバー内のメッセージ受信
+    GatewayIntentBits.MessageContent,         // メッセージ本文（★Developer Portalでもオンにする）
+    GatewayIntentBits.DirectMessages,         // DMの受信
+  ],
+  partials: [Partials.Channel],               // これがないとDMが届かない
+});
 
 const PORT = process.env.PORT || 3000;
 
@@ -33,20 +41,20 @@ http.createServer((req, res)=>{
 
 
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■　bot起動時　■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-client.on('ready', message =>{
-  console.log('準備完了');
-  client.user.setPresence({ game: { name: '東京魔力科' } });
+client.once(Events.ClientReady, () =>{
+  console.log('準備完了 : ' + client.user.tag);
+  client.user.setPresence({ activities: [{ name: '東京魔力科', type: ActivityType.Playing }] });
 });
 
 //■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■　messageきたぞ(await使う用)　■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-client.on('message', async message => {
+client.on(Events.MessageCreate, async message => {
   
 //■■■■■■■■■■　bot自身の発言を無視
   if (message.author.id == client.user.id || message.author.bot){return;}
   
   
   if (message.content.match(/^！！！！！再投稿！！！！！/)){
-    const maemsgs = await message.channel.fetchMessages({limit:1})
+    const maemsgs = await message.channel.messages.fetch({limit:1})
     const maemsg = maemsgs.last();
     message.channel.send(maemsg.content.split('！！！！！再投稿！！！！！\n')[1]);
     maemsg.delete();
@@ -60,7 +68,7 @@ client.on('message', async message => {
       console.log('message.content : '+message.content);
       console.log('before : '+before);
       console.log('after : '+after);
-      const logs   = await message.channel.fetchMessages({ limit:100 });
+      const logs   = await message.channel.messages.fetch({ limit:100 });
       console.log('logs.size : '+logs.size);
       await logs.forEach(log=>{
               console.log('log.content : '+log.content);
@@ -79,7 +87,7 @@ client.on('message', async message => {
   }
   if(message.content.match(/^全部全部おまえのものにしてくれ！$/)&&!message.author.bot){
     await message.delete();
-    const messages = await message.channel.fetchMessages({limit:100});
+    const messages = await message.channel.messages.fetch({limit:100});
     const contentlist = [];
     await messages.forEach(m => { contentlist.unshift(m.content);
                                   m.delete(); });
@@ -93,7 +101,7 @@ client.on('message', async message => {
     const command = message.content.split(/\s|\n|　/);
     if(message.author.id=='433264793604980758'&&command.length==3){
       await message.delete();
-      const messages = await message.channel.fetchMessages({limit:100});
+      const messages = await message.channel.messages.fetch({limit:100});
       const alllines = messages.map(m=>m.content.replace(new RegExp(command[1],'g'),command[2]))
                        .reverse().join('\n').split('\n').filter(line=>line!=='deleted');
       const nclist = [''];
@@ -237,4 +245,8 @@ if(process.env.DISCORD_BOT_TOKEN == undefined){
  console.log('DISCORD_BOT_TOKENが設定されていません。');
  process.exit(0);
 }
-client.login( process.env.DISCORD_BOT_TOKEN );
+client.login( process.env.DISCORD_BOT_TOKEN ).catch(err => {
+  // 「Used disallowed intents」が出たら、Developer Portal > Bot で MESSAGE CONTENT INTENT をオンにする
+  console.error('ログインに失敗しました : ' + err.message);
+  process.exit(1);
+});
